@@ -1,0 +1,10 @@
+{
+  "name": "lint",
+  "version": "1.0.0",
+  "description": "A linter for lucli",
+  "author": "Mark Drew",
+  "license": "MIT",
+  "keywords": ["lucli", "module", "cfml"],
+  "main": "Module.cfc",
+  "created": "2025-08-26T14:45:07.494621Z"
+}

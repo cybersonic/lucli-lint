@@ -1,6 +1,8 @@
 # CFML Parser and Linter
 
-A comprehensive CFML linter built on Lucee's native AST parser. This module provides static analysis for CFML code, replicating and extending the functionality of CFLint with a more modern, extensible architecture.
+A comprehensive CFML linter built on Lucee's native AST parser. This module provides static analysis for CFML code, replicating and extending the functionality of CFLint with a more modern, extensible architecture. 
+It is intended to be used  as a module for lucli. 
+
 
 ## Features
 
@@ -12,28 +14,15 @@ A comprehensive CFML linter built on Lucee's native AST parser. This module prov
 - **CFLint Compatibility**: Implements many CFLint rules with the same rule codes
 
 ## Usage
-
-```cfml
-// Programmatic usage (CFScript)
-
-// Create linter and configuration
-var ruleConfig = createObject("component", "lib.RuleConfiguration").init();
-var linter = createObject("component", "lib.CFMLLinter").init(ruleConfig);
-
-// Register rules (add what you need)
-linter
-    .addRule(createObject("component", "lib.rules.AvoidUsingCFDumpTagRule").init())
-    .addRule(createObject("component", "lib.rules.QueryParamRule").init());
-
-// Lint a file
-var results = linter.lintFile(expandPath("tests/test_bad.cfm"));
-writeOutput(linter.formatResults(results, "text"));
-
-// Or lint a source string
-var srcResults = linter.lintSource('<cfset x = "test"><cfdump var="#x#">', "inline.cfm");
-writeOutput(linter.formatResults(srcResults, "json"));
-```
-
+1. Install the module via lucli:
+   ```
+   lucli install lint
+   ```
+2. Create a `cflinter.json` configuration file in your project root
+3. Run the linter on your CFML files:
+   ```
+   lucli lint path/to/your/file.cfm --format=text
+   ```  
 ## Architecture
 
 The linter is built with a modular architecture:
@@ -228,11 +217,3 @@ To contribute new rules or improvements:
 ## Development
 
 This module was created as an extensible alternative to CFLint, leveraging Lucee's native AST parsing capabilities for better accuracy and performance.
-
-## Create a GitHub repository for this module (optional)
-
-If you use GitHub CLI, you can create and push a repo from the current directory:
-
-```
-gh repo create --source=. --public --remote=origin --push
-```

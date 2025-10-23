@@ -5,13 +5,15 @@
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
+    function init() {
+        
         variables.ruleCode = "AVOID_USING_CREATEOBJECT";
         variables.ruleName = "CreateObjectChecker";
         variables.description = "Avoid use of creatObject statements";
         variables.severity = "INFO";
         variables.message = "CreateObject found. Use createObject(path_to_component) or even better new path_to_component()";
         variables.group = "ModernSyntax";
+        return this;
     }
     
     /**

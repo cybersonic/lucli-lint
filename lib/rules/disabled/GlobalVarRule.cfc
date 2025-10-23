@@ -5,13 +5,14 @@
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
+    function init() {
         variables.ruleCode = "GLOBAL_VAR";
         variables.ruleName = "GlobalVarChecker";
         variables.description = "Global variable exists";
         variables.severity = "WARNING";
         variables.message = "Identifier *variable* is global. Referencing in a CFC or function should be avoided";
         variables.group = "BugProne";
+        return this;
     }
     
     /**

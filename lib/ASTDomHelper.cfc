@@ -36,14 +36,13 @@ component {
      */
     public array function getCFMLTagsByName(required string tagName){
         var allTags = getAllCFMLTags();
+        
         var matchingTags = [];
         for(var tag in allTags){
             if(structKeyExists(tag, "name") && tag.name == arguments.tagName){
                 arrayAppend(matchingTags, tag);
             }
         }
-
-        
         return matchingTags;
     }
 
@@ -69,26 +68,102 @@ component {
     }
 
     /**
+       * Get all assignment expressions in the AST
+     */
+    public array function getAssignmentsByVariableName(required string varName, any fromNode = null){
+        
+        var allAssignments = getNodesByType(variables.parseResult, "AssignmentExpression");
+        var matchingAssignments = [];
+
+        //TODO: The line of the assignment should be before the fromNode line
+
+        for(var assignment in allAssignments){
+            if(!isEmpty(assignment?.left?.property?.name) && assignment.left.property.name == varName){
+                if(assignment.start.line <= fromNode.start.line){
+                    matchingAssignments.append(assignment);
+                }
+                continue;
+            }
+            if(!isEmpty(assignment?.left?.name) && assignment.left.name == varName){
+                arrayAppend(matchingAssignments, assignment);
+                continue;
+            }
+        }
+
+        // UnaryExpression
+        var unaryExpressions = getNodesByType(variables.parseResult, "UnaryExpression");
+        for(var unary in unaryExpressions){
+            if(!isEmpty(unary?.variable?.name) && unary.variable.name == varName){
+                if(unary.start.line <= fromNode.start.line){
+                matchingAssignments.append(unary);
+                }
+                continue;
+            }
+            if(!isEmpty(unary?.variable?.property?.name) && unary.variable.property.name == varName){
+                if(unary.start.line <= fromNode.start.line){
+                    matchingAssignments.append(unary);
+                }
+                continue;
+            }
+        }
+        return matchingAssignments;
+    }
+
+
+    /**
+     * Get all Call Expressions in the AST
+     */
+    public array function getAllCallExpressions(){
+        return getNodesByType(variables.parseResult, "CallExpression");
+    }
+
+
+
+    /**
      * Recursively find all nodes of a specific type in the AST
      * @param root The root node to start searching from
      * @param type The node type to search for
      * @return Array of matching nodes
      */
     function getNodesByType(any root, required string type){
-        var results = [];
-        
-        // Check if current node matches
-        if(isStruct(root) && structKeyExists(root, "type") && root.type == arguments.type){
-            arrayAppend(results, root);
+        var results = []; 
+        if(!isEmpty(root?.type) && root.type == arguments.type){
+            results.append(root);
         }
-        
-        // Recursively traverse child nodes
-        traverseNode(root, function(node) {
-            if(isStruct(node) && structKeyExists(node, "type") && node.type == type){
-                arrayAppend(results, node);
+
+
+       
+        if(isArray(root.body?:nullValue())){
+            for(var item in root.body){
+                results.append( getNodesByType(item, type), true);
             }
-        });
+        }
+        if(isStruct(root.body?:nullValue())){
+            results.append( getNodesByType(root.body, type) , true);
+        }
+
         
+
+       
+        if(isArray(root.attributes?:nullValue())){
+            for(var item in root.attributes){
+                results.append( getNodesByType(item, type), true);
+            }
+            
+        }
+
+        if(isArray(root.arguments?:nullValue())){
+            // dump(var="going through the arguments key", label="getNodesByType");
+            for(var item in root.arguments){
+                results.append( getNodesByType(item, type), true);
+            }
+            
+        }
+
+        if(isStruct(root.expression?:nullValue()) && root.expression.type == "type"){
+            results.append( root.expression );
+        }
+
         return results;
     }
 
@@ -98,7 +173,7 @@ component {
      * @param callback Function to call for each node
      */
     function traverseNode(any node, required function callback){
-        if(!isStruct(node)) {
+        if( !isStruct(node) ) {
             return;
         }
         
@@ -107,6 +182,10 @@ component {
         
         // Traverse all properties of the node
         for(var key in node){
+            
+            if(isNull(node[key])){
+                continue;
+            }
             var value = node[key];
             
             if(isArray(value)){

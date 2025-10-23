@@ -41,6 +41,9 @@
         },
         "AVOID_USING_CREATEOBJECT": {
             "enabled": true
+        },
+        "AVOID_USING_SQL": {    
+            "enabled": true
         }
     }
 }

@@ -13,5 +13,8 @@
     "maxMemory" : "512m",
     "minMemory" : "128m",
     "additionalArgs" : [ ]
+  },
+  "module" : {
+    "enabled" : true
   }
 }

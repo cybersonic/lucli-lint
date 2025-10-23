@@ -18,9 +18,7 @@ component {
             variables.ruleConfiguration = createObject("component", "RuleConfiguration").init();
         }
         
-        // Don't auto-load rules for now - we'll add them manually in the module
-        // loadDefaultRules();
-        
+    
         return this;
     }
     
@@ -47,20 +45,8 @@ component {
         
         // Parse the file using Lucee's AST parser
         var ast = astFromPath(arguments.filePath);
-        return lintAST(ast, arguments.filePath);
-    }
-    
-    /**
-     * Lint CFML source code directly  
-     * @param source The CFML source code to lint
-     * @param fileName Optional file name for reporting
-     * @return Array of LintResult objects
-     */
-    function lintSource(required string source, string fileName = "inline") {
-        // Parse the source using Lucee's AST parser
-        var ast = astFromString(arguments.source);
         
-        return lintAST(ast, arguments.fileName);
+        return lintAST(ast, arguments.filePath);
     }
     
     /**
@@ -73,26 +59,29 @@ component {
         var results = [];
         
         // Create AST helper
-        variables.astHelper = createObject("component", "ASTDomHelper").init(arguments.ast);
+        variables.astHelper = new ASTDomHelper(arguments.ast);
+        
+        var rules = variables.ruleConfiguration.getEnabledRules();
+        var fileContent = FileRead(fileName);
+        
         // Run all enabled rules
-        for (var rule in variables.rules) {
-            if (rule.isEnabled()) {
-                
+        for (var rule in rules) {
                 try {
-                    var ruleResults = rule.check(arguments.ast, variables.astHelper, arguments.fileName);
+                    var ruleResults = rules[rule].check(
+                        node:arguments.ast,
+                        helper: variables.astHelper,
+                        filename: arguments.fileName,
+                        fileContent: fileContent);
+
                     if (isArray(ruleResults)) {
                         arrayAppend(results, ruleResults, true);
                     }
+                    else {
+                        arrayAppend(results, ruleResults);
+                    }
                 } catch (any e) {
-                    dump(e);
-                    // Log rule execution error but continue with other rules
-                    writeLog(
-                        type="error", 
-                        file="cfml_linter", 
-                        text="Error executing rule " & rule.getRuleInfo().ruleCode & ": " & e.message
-                    );
+                    echo(e.stackTrace);
                 }
-            }
         }
         
         // Sort results by severity and location
@@ -110,20 +99,7 @@ component {
         return this;
     }
     
-    /**
-     * Remove a rule by code
-     * @param ruleCode The rule code to remove
-     */
-    function removeRule(required string ruleCode) {
-        for (var i = arrayLen(variables.rules); i >= 1; i--) {
-            var rule = variables.rules[i];
-            if (rule.getRuleInfo().ruleCode == arguments.ruleCode) {
-                arrayDeleteAt(variables.rules, i);
-            }
-        }
-        return this;
-    }
-    
+  
     /**
      * Get a rule by code
      * @param ruleCode The rule code to find
@@ -189,42 +165,6 @@ component {
         return groupRules;
     }
     
-    /**
-     * Load default rules
-     */
-    function loadDefaultRules() {
-        // We'll implement rule loading mechanism later
-        // For now, manually add some basic rules
-        try {
-            // Try to load rules from the rules directory
-            var rulesPath = getDirectoryFromPath(getCurrentTemplatePath()) & "rules/";
-            if (directoryExists(rulesPath)) {
-                var ruleFiles = directoryList(rulesPath, false, "name", "*.cfc");
-                for (var ruleFile in ruleFiles) {
-                    try {
-                        var ruleName = listFirst(ruleFile, ".");
-                        var rulePath = "rules." & ruleName;
-                        var rule = createObject("component", rulePath).init();
-                        addRule(rule);
-                    } catch (any e) {
-                        // Rule failed to load, continue with others
-                        writeLog(
-                            type="warning", 
-                            file="cfml_linter", 
-                            text="Failed to load rule " & ruleFile & ": " & e.message
-                        );
-                    }
-                }
-            }
-        } catch (any e) {
-            // If rule loading fails, continue without rules
-            writeLog(
-                type="warning", 
-                file="cfml_linter", 
-                text="Failed to load default rules: " & e.message
-            );
-        }
-    }
     
     /**
      * Sort results by severity (highest first) and then by line number
@@ -305,6 +245,11 @@ component {
                 return formatResultsAsJSON(arguments.results);
             case "xml":
                 return formatResultsAsXML(arguments.results);
+            case "bitbucket":
+                // Placeholder for Bitbucket format
+                return formatResultsAsBitbucket(arguments.results);
+            case "silent":
+                return ""; // No output
             default:
                 return formatResultsAsText(arguments.results);
         }
@@ -386,5 +331,52 @@ component {
         arrayAppend(xml, "</lintResults>");
         
         return arrayToList(xml, chr(10));
+    }
+
+    /**
+     * Format results as Bitbucket Report
+     */
+    function formatResultsAsBitbucket(required array results) {
+        // Bitbucket Code Insights format
+        var bitbucketReport = {
+            "title": "CFML Linter Report",
+            "details": "Static analysis results for CFML code",
+            "result": "PASS", // Will be set to FAIL if there are errors
+            "data": []
+        };
+        
+        var summary = generateSummary(arguments.results);
+        
+        // Set result based on error count
+        if (summary.errors > 0) {
+            bitbucketReport.result = "FAIL";
+        }
+        
+        // Convert lint results to Bitbucket annotations format
+        for (var result in arguments.results) {
+            var annotation = {
+            "path": result.getFileName(),
+            "line": result.getLine(),
+            "message": "[" & result.getRuleCode() & "] " & result.getFormattedMessage(),
+            "severity": lcase(result.getSeverity()), // Bitbucket uses lowercase
+            "type": "CODE_SMELL" // Default type, could be BUG for errors
+            };
+            
+            // Map severity to Bitbucket types
+            if (result.getSeverity() == "ERROR") {
+            annotation.type = "BUG";
+            annotation.severity = "high";
+            } else if (result.getSeverity() == "WARNING") {
+            annotation.type = "CODE_SMELL";
+            annotation.severity = "medium";
+            } else {
+            annotation.type = "CODE_SMELL";
+            annotation.severity = "low";
+            }
+            
+            arrayAppend(bitbucketReport.data, annotation);
+        }
+        
+        return serializeJSON(bitbucketReport);
     }
 }

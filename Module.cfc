@@ -5,105 +5,112 @@ component {
      * This is the main entry point for the CFML linting module.
      * It uses Lucee's built-in AST parser and applies configurable linting rules.
      */
-    function init() {
-        // Module initialization code goes here
+    function init(
+        verbose=false,
+        timing=false,
+        cwd=""
+    ) {
+        variables.verbose = arguments.verbose;
+        variables.timing = arguments.timing;
+        variables.cwd = arguments.cwd;
+        // TOOD
+        // verbose(serializeJSON(arguments))
+        // timing.start(serializeJSON(arguments))
+        // timing.end(serializeJSON(arguments))
+        
         return this;
     }
-    
-    function main(args) {
-        try {
-            // out("Debug: Starting main function");
-            dump(args);
-            // Check if we have at least one argument (file path)
-            if (arrayLen(args) < 1) {
-                show(Help());
-                return "Usage information displayed";
-            }
-            
-            // out("Debug: Parsing arguments");
-            var filePath = args[1];
-            var options = parseCommandLineOptions(args);
 
+    /**
+     * main entry point
+     *
+     * @file path to the file to lint
+     * @folder path to the folder to lint (optional)
+     * @format format of the output (text, json, xml, silent (for tests))
+     * @rules comma-separated list of rules to apply, if left empty, it will look for rules in config file or use all enabled rules
+     * @config path to config file, if not provided, it will look for cflinter.json in the current directory of the file or folder
+     * @return struct with linting results
+     */
+    function main(
+        string file="",
+        string folder="",
+        string format = "json",
+        string rules = "",
+        string config = ""
+        ) {
+
+        if(variables.verbose){
+            out("CFML Linter Module initialized.");
+            out("file = " & file);
+            out("folder = " & folder);
+            out("format = " & format);
+            out("rules = " & rules);
+            out("cwd = " & variables.cwd);
+            out("config = " & arguments.config);
+        }
+        
+
+        // File or Folder is required
+        if(!len(file) && !len(folder)){
+            out("No file or folder specified. Showing help:");
+            return showHelp();
+        }
+
+        //Create the rule configuration (with all the rules)
+        var configPath = Len(arguments.config) ? arguments.config : getDirectoryFromPath(variables.cwd) & "cflinter.json";
+        
+        var RuleConfig = nullValue();
+        if (fileExists(configPath)) {
+            RuleConfig = createObject("component", "lib.RuleConfiguration").init(configPath);
+        } else {
+            RuleConfig = createObject("component", "lib.RuleConfiguration").init();
+        }
+               
+
+        // If specific rules are provided, enable only those
+        if(len(arguments.rules)){
+            var ruleList = ListToArray(arguments.rules);
+            RuleConfig.enableOnlyRules(ruleList);
+        }
+
+        // Create linter 
+        var linter = createObject("component", "lib.CFMLLinter").init(RuleConfig);        
             
-            dump(options);
-            
-            // out("Debug: Checking for rules-only option");
-            
-            // Show rules only if requested
-            if (structKeyExists(options, "rules-only")) {
-                // out("Debug: Calling showAvailableRules");
-                return showAvailableRules();
-            }
-            
-            // out("Debug: Loading configuration");
-            
-            // Load configuration  
-            var configPath = "";
-            if (structKeyExists(options, "config")) {
-                configPath = options.config;
-                // out("Debug: Using provided config: " & configPath);
-            } else {
-                var currentPath = getCurrentTemplatePath();
-                // out("Debug: Current template path: " & currentPath);
-                var dirPath = getDirectoryFromPath(currentPath);
-                // out("Debug: Directory path: " & dirPath);
-                configPath = dirPath & "cflinter.json";
-                // out("Debug: Default config path: " & configPath);
-            }
-            
-            var config = nullValue();
-            
-            
-            if (fileExists(configPath)) {
-                config = createObject("component", "lib.RuleConfiguration").init(configPath);
-                // out("Using configuration: " & configPath);
-            } else {
-                config = createObject("component", "lib.RuleConfiguration").init();
-                // out("Using default configuration (no config file found)");
-            }
-            
-            
-            // Create linter instance
-            var linter = createObject("component", "lib.CFMLLinter").init(config);
-            
-            
-            // Add our custom rules manually since the auto-discovery might not work yet
-            linter.addRule(createObject("component", "lib.rules.AvoidUsingCFDumpTagRule").init());
-            linter.addRule(createObject("component", "lib.rules.AvoidUsingCFAbortTagRule").init());
-            linter.addRule(createObject("component", "lib.rules.VariableNameChecker").init());
-            linter.addRule(createObject("component", "lib.rules.MissingVarRule").init());
-            linter.addRule(createObject("component", "lib.rules.QueryParamRule").init());
-            linter.addRule(createObject("component", "lib.rules.ExcessiveFunctionLengthRule").init());
-            linter.addRule(createObject("component", "lib.rules.FunctionHintMissingRule").init());
-            linter.addRule(createObject("component", "lib.rules.GlobalVarRule").init());
-            linter.addRule(createObject("component", "lib.rules.AvoidUsingCreateObjectRule").init());
-            linter.addRule(createObject("component", "lib.rules.QueryParamRule").init());
-            
-            
-            // Lint the file
-            var results = linter.lintFile(filePath);
+        // Lint the file
+        var results = {};
+        if(!isEmpty(arguments.file)) {
+            results = linter.lintFile(arguments.file);
+        } else if(!isEmpty(arguments.folder)) {
+            results = linter.lintFolder(arguments.folder);
+        }
             
             // Output results
-            var outputFormat = structKeyExists(options, "format") ? options.format : "text";
+            var outputFormat = arguments.format;
             if(outputFormat == "text"){
-                out("Linting file: " & filePath);
+                if(!isEmpty(arguments.file)){
+                    out("Linting file: " & arguments.file);
+                } else if(!isEmpty(arguments.folder)){
+                    out("Linting folder: " & arguments.folder);
+                }
                 out("Rules loaded: " & arrayLen(linter.getEnabledRules()));
                 out("");
             }
+          
             var formattedResults = linter.formatResults(results, outputFormat);
             
             out(formattedResults);
             
-            return "Linting completed with " & arrayLen(results) & " issues found";
+            return results;
             
-        } catch (any e) {
-            out("Error: " & e.message);
-            // dump(e);
-            if (structKeyExists(e, "detail") && len(e.detail)) {
-                out("Details: " & e.detail);
-            }
-            return "Linting failed";
-        }
+        // } catch (any e) {
+        //     dump(e);
+        //     out("Error: " & e.message);
+        //     // dump(e);
+        //     if (structKeyExists(e, "detail") && len(e.detail)) {
+        //         out("Details: " & e.detail);
+        //     }
+        //     return "Linting failed";
+        // }
     }
 
     function out(any message){
@@ -111,39 +118,6 @@ component {
             message = serializeJson(var=message, compact=false);
         }
         writeOutput(message & chr(10));
-    }
-    
-    /**
-     * Parse command line options from arguments array
-     */
-    function parseCommandLineOptions(required array args) {
-        var options = {};
-        
-        // out("Debug: parseCommandLineOptions - args length: " & arrayLen(arguments.args));
-        
-        for (var i = 2; i <= arrayLen(arguments.args); i++) {
-            var arg = arguments.args[i];
-            // out("Debug: Processing arg " & i & ": " & arg);
-            
-            if (left(arg, 2) == "--") {
-                var option = mid(arg, 3, len(arg));
-                // out("Debug: Parsed option: " & option);
-                
-                if (find("=", option)) {
-                    var parts = listToArray(option, "=");
-                    if (arrayLen(parts) >= 2) {
-                        options[parts[1]] = parts[2];
-                        // out("Debug: Set option " & parts[1] & " = " & parts[2]);
-                    }
-                } else {
-                    options[option] = true;
-                    // out("Debug: Set flag option " & option & " = true");
-                }
-            }
-        }
-        
-        // out("Debug: Parsed options: " & serializeJSON(options));
-        return options;
     }
     
     /**
@@ -189,14 +163,13 @@ component {
 
 
     function showHelp() {
+        
         out("CFML Linter Module Help:");
         out("=========================");
-        out("Usage: lucli cfml_parser/Module.cfc <file_path> [options]");
+        out("Usage: lucli cfml_parser/Module.cfc file=<file_path> [options]");
         out("Options:");
-        out("  --format=text|json|xml  Output format (default: text)");
-        out("  --config=<path>         Configuration file path");
-        out("  --rules-only            Show available rules only");
-        out("  --rules=<rules>      Only run specified rules (comma-separated)");
+        out("  format=text|json|xml  Output format (default: text)");
+        out("  rules=<rules>      Only run specified rules (comma-separated)");
         return "Help information displayed";
     }
     

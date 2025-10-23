@@ -5,8 +5,9 @@
  */
 component {
     
-    property name="ruleSettings" type="struct";
-    property name="globalSettings" type="struct";
+    property name="ruleSettings" type="struct" default="#{}#";
+    property name="globalSettings" type="struct" default="#{}#";
+    property name="rules" type="struct" default="#{}#";
     
     function init(string configFile = "") {
         variables.ruleSettings = {};
@@ -15,12 +16,26 @@ component {
             showRuleNames: true,
             exitOnError: false,
             maxIssues: 0 // 0 = unlimited
-        };
-        
+        }; 
+
         if (len(arguments.configFile) && fileExists(arguments.configFile)) {
             loadConfigurationFromFile(arguments.configFile);
         }
-        
+         // Add all the installed rules
+        var rulesPath = expandPath("./rules/");
+        var rules = directoryList(expandPath("./lib/rules/"), false, "name", "*.cfc");
+        for(var ruleClass in rules) {
+            
+            var ruleName = listFirst(ruleClass, ".");
+            var rule = createObject("component", "lib.rules.#ruleName#").init();
+            var ruleCode = rule.getRuleCode();
+            if(variables.ruleSettings.KeyExists(ruleCode)){
+                // Override the paramters from the config
+                rule.setParameters(variables.ruleSettings[ruleCode]);
+            }
+            variables.rules[ruleCode] = rule; 
+        }
+
         return this;
     }
     
@@ -53,6 +68,7 @@ component {
      * @param configFile Path where to save the configuration
      */
     function saveConfigurationToFile(required string configFile) {
+        // We need to actually get each rule item here
         var config = {
             "global": variables.globalSettings,
             "rules": variables.ruleSettings
@@ -63,6 +79,15 @@ component {
         } catch (any e) {
             throw(type="ConfigurationError", message="Failed to save configuration file: " & e.message);
         }
+    }
+
+
+
+
+    public struct function getEnabledRules(){
+        return variables.rules.filter(function(key,value){
+            return value.isEnabled();
+        });
     }
     
     /**
@@ -103,6 +128,26 @@ component {
         
         return this;
     }
+
+
+    /**
+     * Only enable the following rules. Good for specific rule matching
+     *
+     * @ruleCodes an array of rule codes to enable
+     */
+    function enableOnlyRules(required array ruleCodes) {
+        // Disable all rules first
+        for (var ruleCode in structKeyArray(variables.rules)) {
+            setRuleEnabled(ruleCode, false);
+        }
+        // Enable only specified rules
+        for (var code in arguments.ruleCodes) {
+            setRuleEnabled(code, true);
+        }
+        return this;
+    }
+
+
     
     /**
      * Get a rule parameter value

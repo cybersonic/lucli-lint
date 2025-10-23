@@ -5,18 +5,18 @@
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
+     variables.parameters = {
+            "length": 100
+    };
+
+    function init() {
         variables.ruleCode = "EXCESSIVE_FUNCTION_LENGTH";
         variables.ruleName = "FunctionLengthChecker";
         variables.description = "Method is too long";
         variables.severity = "WARNING";
         variables.message = "Function *function* is *variable* lines. Should be fewer than *maxLength* lines";
         variables.group = "Complexity";
-        
-        // Default parameters
-        variables.parameters = {
-            "length": 100
-        };
+        return this;
     }
     
     /**

@@ -1,17 +1,20 @@
 /**
- * AVOID_USING_CFDUMP_TAG Rule
+ * Avoid using CFAbort Rule
  * 
- * Detects usage of <cfdump> tags which should not be left in production code
+ * Detects usage of <cfabort> tags and statements which should not be left in production code
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
-        variables.ruleCode = "AVOID_USING_CFDUMP_TAG";
+    function init() {
+        
+        variables.ruleCode = "AVOID_USING_CFAbort_TAG";
         variables.ruleName = "CFDumpChecker";
         variables.description = "Avoid use of cfdump tags";
         variables.severity = "WARNING";
         variables.message = "Avoid leaving <cfdump> tags in committed code. Debug information should be omitted from release code";
         variables.group = "BadPractice";
+
+        return this;
     }
     
     /**

@@ -4,37 +4,19 @@
  * Abstract base class for all CFML linting rules
  * All rules should extend this class and implement the check() method
  */
-component {
+component accessors="true" {
     
     // Rule metadata
     property name="ruleCode" type="string";
     property name="ruleName" type="string";
     property name="description" type="string";
-    property name="severity" type="string"; // ERROR, WARNING, INFO
+    property name="severity" type="string";  default="WARNING"; // ERROR, WARNING, INFO
     property name="message" type="string";
-    property name="group" type="string"; // BugProne, Security, CodeStyle, etc.
+    property name="group" type="string" default="General"; // BugProne, Security, CodeStyle, etc.
     property name="enabled" type="boolean" default="true";
     property name="parameters" type="struct";
-    
-    function init() {
-        variables.enabled = true;
-        variables.parameters = {};
-        variables.severity = "WARNING";
-        variables.group = "General";
-        
-        // Initialize rule-specific properties
-        initRuleProperties();
-        
-        return this;
-    }
-    
-    /**
-     * Override this method in subclasses to set rule-specific properties
-     */
-    function initRuleProperties() {
-        // Default implementation - override in subclasses
-    }
-    
+
+   
     /**
      * Main method to check AST node for violations
      * Override this in implementing rules
@@ -44,7 +26,7 @@ component {
      * @param fileName The name of the file being checked
      * @return Array of LintResult objects
      */
-    function check(required struct node, required any helper, string fileName = "") {
+    function check(required struct node, required any helper, string fileName = "", string fileContent = "") {
         throw(type="NotImplemented", message="check() method must be implemented by subclasses");
     }
     
@@ -74,91 +56,45 @@ component {
     }
     
     /**
+     * Set Paramters, takes in a list of parameters and overrides the existing paramter
+     */
+    function setParameters(required struct params) {
+        for (var param in arguments.params){
+            setParameter(param, arguments.params[param]);
+        }
+        return this;
+    }
+
+    /**
      * Set rule parameter
      */
     function setParameter(required string name, required any value) {
         variables.parameters[arguments.name] = arguments.value;
         return this;
     }
-    
+
+
     /**
      * Create a LintResult for this rule
      */
-    function createResult(
-        required string message,
-        string fileName = "",
-        numeric line = 0,
-        numeric column = 0,
-        numeric offset = 0,
-        string variable = ""
-    ) {
-        return createObject("component", "LintResult").init(
-            ruleCode = variables.ruleCode ?: "",
-            severity = variables.severity ?: "WARNING",
-            message = arguments.message,
-            fileName = arguments.fileName,
-            line = arguments.line,
-            column = arguments.column,
-            offset = arguments.offset,
-            variable = arguments.variable,
-            ruleName = variables.ruleName ?: "",
-            ruleDescription = variables.description ?: ""
+    function createLintResult(
+        required any lintRule,
+        required any node,
+        required string fileName = "",
+        required string fileContent = ""
+    ){
+
+        var lintResult = new LintResult(
+            rule : arguments.lintRule,
+            node : arguments.node,
+            fileName : arguments.fileName,
+            fileContent : arguments.fileContent
         );
+
+        return lintResult;
     }
     
-    /**
-     * Create a LintResult from an AST node location
-     */
-    function createResultFromNode(
-        required string message,
-        required struct node,
-        string fileName = "",
-        string variable = ""
-    ) {
-        var location = getNodeLocation(arguments.node);
-        
-        return createResult(
-            message = arguments.message,
-            fileName = arguments.fileName,
-            line = location.line,
-            column = location.column,
-            offset = location.offset,
-            variable = arguments.variable
-        );
-    }
-    
-    /**
-     * Extract location information from AST node
-     */
-    function getNodeLocation(required struct node) {
-        var location = {
-            line: 0,
-            column: 0,
-            offset: 0
-        };
-        
-        if (structKeyExists(arguments.node, "start") && isStruct(arguments.node.start)) {
-            if (structKeyExists(arguments.node.start, "line")) {
-                location.line = arguments.node.start.line;
-            }
-            if (structKeyExists(arguments.node.start, "column")) {
-                location.column = arguments.node.start.column;
-            }
-            if (structKeyExists(arguments.node.start, "offset")) {
-                location.offset = arguments.node.start.offset;
-            }
-        }
-        
-        return location;
-    }
-    
-    /**
-     * Check if node matches given type
-     */
-    function nodeHasType(required struct node, required string type) {
-        return structKeyExists(arguments.node, "type") && arguments.node.type == arguments.type;
-    }
-    
+
     /**
      * Get rule metadata as struct
      */

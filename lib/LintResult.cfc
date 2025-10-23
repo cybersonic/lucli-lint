@@ -6,39 +6,46 @@
 component accessors="true" {
     
     property name="ruleCode" type="string";
+    property name="ruleName" type="string";
+    property name="ruleDescription" type="string";
     property name="severity" type="string"; // ERROR, WARNING, INFO
     property name="message" type="string";
     property name="fileName" type="string";
     property name="line" type="numeric";
     property name="column" type="numeric";
     property name="offset" type="numeric";
-    property name="variable" type="string"; // Variable name involved in the issue
-    property name="ruleName" type="string";
-    property name="ruleDescription" type="string";
+    property name="endline" type="numeric";
+    property name="endcolumn" type="numeric";
+    property name="endOffset" type="numeric";
+    property name="code" type="string";
+
     
     function init(
-        required string ruleCode,
-        required string severity,
-        required string message,
-        string fileName = "",
-        numeric line = 0,
-        numeric column = 0,
-        numeric offset = 0,
-        string variable = "",
-        string ruleName = "",
-        string ruleDescription = ""
-    ) {
-        variables.ruleCode = arguments.ruleCode;
-        variables.severity = arguments.severity;
-        variables.message = arguments.message;
-        variables.fileName = arguments.fileName;
-        variables.line = arguments.line;
-        variables.column = arguments.column;
-        variables.offset = arguments.offset;
-        variables.variable = arguments.variable;
-        variables.ruleName = arguments.ruleName;
-        variables.ruleDescription = arguments.ruleDescription;
+        required any rule,
+        required any node,
+        required string fileName,
+        required string fileContent,
         
+
+    ) {
+       
+        // Here is where we do the actual work
+        setRuleCode(arguments.rule.getRuleCode());
+        setRuleName(arguments.rule.getRuleName());
+        setRuleDescription(arguments.rule.getDescription());
+        setSeverity(arguments.rule.getSeverity());
+        setMessage(arguments.rule.getMessage());
+        setFileName(arguments.fileName);
+        setLine(arguments.node.start.line);
+        setColumn(arguments.node.start.column);
+        setOffset(arguments.node.start.offset);
+        setEndLine(arguments.node.end.line);
+        setEndColumn(arguments.node.end.column);
+        setEndOffset(arguments.node.end.offset);
+
+        // setVariable(arguments.variable);
+        setCode(Mid(arguments.fileContent, arguments.node.start.offset, arguments.node.end.offset - arguments.node.start.offset + 1));
+
         return this;
     }
     
@@ -59,15 +66,18 @@ component accessors="true" {
     function toStruct() {
         return {
             "ruleCode": variables.ruleCode,
+            "ruleName": variables.ruleName,
+            "ruleDescription": variables.ruleDescription,
             "severity": variables.severity,
-            "message": getFormattedMessage(),
+            "message": variables.message,
             "fileName": variables.fileName,
             "line": variables.line,
             "column": variables.column,
             "offset": variables.offset,
-            "variable": variables.variable,
-            "ruleName": variables.ruleName,
-            "ruleDescription": variables.ruleDescription
+            "endline": variables.endline,
+            "endcolumn": variables.endcolumn,
+            "endOffset": variables.endOffset,
+            "code": variables.code,
         };
     }
     

@@ -6,13 +6,14 @@
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
+    function init() {
         variables.ruleCode = "CFQUERYPARAM_REQ";
         variables.ruleName = "QueryParamChecker";
         variables.description = "cfquery should use <cfqueryparam>";
         variables.severity = "WARNING";
         variables.message = "<*tag*> should use <cfqueryparam/> for variable '*variable*'";
         variables.group = "Security";
+        return this;
     }
     
     /**
@@ -24,8 +25,7 @@ component extends="../BaseRule" {
         // Find all cfquery tags
         var queryTags = helper.getCFMLTagsByName("query");
         
-        dump(queryTags);
-        abort;
+      
         for (var queryTag in queryTags) {
             var violations = checkQueryForParams(queryTag, helper);
             

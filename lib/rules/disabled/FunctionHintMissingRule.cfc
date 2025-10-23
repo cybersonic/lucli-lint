@@ -5,13 +5,14 @@
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
+    function init() {
         variables.ruleCode = "FUNCTION_HINT_MISSING";
         variables.ruleName = "FunctionHintChecker";
         variables.description = "Function is missing a hint";
         variables.severity = "INFO";
         variables.message = "Function *variable* is missing a hint";
         variables.group = "CodeStyle";
+        return this;
     }
     
     /**

@@ -5,21 +5,23 @@
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
+    // Default parameters
+    variables.parameters = {
+        "case": "camelCase",
+        "minLength": 3,
+        "maxLength": 20,
+        "maxWords": 4
+    };
+
+
+    function init() {
         variables.ruleCode = "VAR_INVALID_NAME";
         variables.ruleName = "VariableNameChecker";
         variables.description = "Variable has invalid name";
         variables.severity = "INFO";
         variables.message = "Variable *variable* is not a valid name. Please use camelCase or underscores";
         variables.group = "Naming";
-        
-        // Default parameters
-        variables.parameters = {
-            "case": "camelCase",
-            "minLength": 3,
-            "maxLength": 20,
-            "maxWords": 4
-        };
+        return this;
     }
     
     /**

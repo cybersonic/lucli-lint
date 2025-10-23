@@ -6,13 +6,15 @@
  */
 component extends="../BaseRule" {
     
-    function initRuleProperties() {
+    function init() {
         variables.ruleCode = "MISSING_VAR";
         variables.ruleName = "VarScoper";
         variables.description = "Variable is not declared with a var statement";
         variables.severity = "ERROR";
         variables.message = "Variable *variable* is not declared with a var statement";
         variables.group = "BugProne";
+        variables.enabled = false;
+        return this;
     }
     
     /**
@@ -29,6 +31,7 @@ component extends="../BaseRule" {
             var declaredVars = getDeclaredVariables(func);
             var usedVars = getUsedVariables(func);
             
+            abort;
             // Check each used variable to see if it's declared
             for (var varName in usedVars) {
                 if (!isVariableDeclared(varName, declaredVars) && 

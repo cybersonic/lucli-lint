@@ -78,7 +78,7 @@ component {
         //TODO: The line of the assignment should be before the fromNode line
 
         for(var assignment in allAssignments){
-            if(!isEmpty(assignment?.left?.property?.name) && assignment.left.property.name == varName){
+            if(!isEmpty(assignment?.left?.property?.name) && isSimpleValue(assignment.left.property.name) && assignment.left.property.name == varName){
                 if(assignment.start.line <= fromNode.start.line){
                     matchingAssignments.append(assignment);
                 }

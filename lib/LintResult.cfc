@@ -8,7 +8,7 @@ component accessors="true" {
     property name="ruleCode" type="string";
     property name="ruleName" type="string";
     property name="ruleDescription" type="string";
-    property name="severity" type="string"; // ERROR, WARNING, INFO
+    property name="severity" type="string"; // ERROR, WARNING, INFO, FAILURE
     property name="message" type="string";
     property name="fileName" type="string";
     property name="line" type="numeric";
@@ -18,6 +18,7 @@ component accessors="true" {
     property name="endcolumn" type="numeric";
     property name="endOffset" type="numeric";
     property name="code" type="string";
+    property name="variable" type="string";
 
     
     function init(
@@ -43,8 +44,17 @@ component accessors="true" {
         setEndColumn(arguments.node.end.column);
         setEndOffset(arguments.node.end.offset);
 
+        try{
+            var start = arguments.node.start.offset < 1 ? 1 : arguments.node.start.offset;
+            var count = arguments.node.end.offset - start;
+            setCode(Mid(arguments.fileContent, start, count));
+
+        }
+        catch(e){
+            dump(e);
+            dump(arguments);
+        }
         // setVariable(arguments.variable);
-        setCode(Mid(arguments.fileContent, arguments.node.start.offset, arguments.node.end.offset - arguments.node.start.offset + 1));
 
         return this;
     }
@@ -54,8 +64,9 @@ component accessors="true" {
      */
     function getFormattedMessage() {
         var msg = variables.message;
-        if (len(variables.variable)) {
-            msg = replace(msg, "*variable*", variables.variable, "all");
+        var varValue = variables.variable ?: "";
+        if (len(varValue)) {
+            msg = replace(msg, "*variable*", varValue, "all");
         }
         return msg;
     }

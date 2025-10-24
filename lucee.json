@@ -1,20 +1,17 @@
 {
-  "name" : "lucee_lint",
+  "name" : "lucee-lint",
   "version" : "7.0.1.22-SNAPSHOT",
   "port" : 8000,
   "webroot" : "./",
   "monitoring" : {
     "enabled" : true,
     "jmx" : {
-      "port" : 8001
+      "port" : 8003
     }
   },
   "jvm" : {
     "maxMemory" : "512m",
     "minMemory" : "128m",
     "additionalArgs" : [ ]
-  },
-  "module" : {
-    "enabled" : true
   }
 }

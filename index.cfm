@@ -1,11 +1,14 @@
 <cfscript>
     module = new Module(
-        verbose : true,
+        verbose : false,
         timing : true,
         cwd : getDirectoryFromPath(getCurrentTemplatePath())
         
 
     );
-    ret = module.main(file="tests/test_sql_query.cfm", format="silent", rules="AVOID_USING_SQL");
-    dump(ret);
+    echo("<pre>");
+    ret = module.main(folder="webroot/cron/", format="text", rules="AVOID_USING_SQL");
+    echo("</pre>");
+    echo("Found #arrayLen(ret)# lint results");
+    
 </cfscript>

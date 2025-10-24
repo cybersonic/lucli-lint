@@ -76,13 +76,43 @@ component {
         // Create linter 
         var linter = createObject("component", "lib.CFMLLinter").init(RuleConfig);        
             
-        // Lint the file
-        var results = {};
+        
+
+        // Check if the folder or file path is relative , or absolute
+
+        // Use Java File class for cross-platform path handling
+        var fileObj = createObject("java", "java.io.File");
+
+        // Linting Results
+        var results = [];
+
+        // Check the file path. 
         if(!isEmpty(arguments.file)) {
-            results = linter.lintFile(arguments.file);
-        } else if(!isEmpty(arguments.folder)) {
-            results = linter.lintFolder(arguments.folder);
+            var filePath = fileObj.init(arguments.file);
+            if(!filePath.isAbsolute()) {
+                arguments.file = fileObj.init(variables.cwd, arguments.file).getCanonicalPath();
+            } else {
+                arguments.file = filePath.getAbsolutePath();
+            }
+
+            var fileResults = linter.lintFile(arguments.file);
+            results.append(fileResults, true);
         }
+
+        
+        // Check the folder path.
+        if(!isEmpty(arguments.folder)) {
+            var folderPath = fileObj.init(arguments.folder);
+            if(!folderPath.isAbsolute()) {
+                arguments.folder = fileObj.init(variables.cwd, arguments.folder).getCanonicalPath();
+            } else {
+                arguments.folder = folderPath.getAbsolutePath();
+            }
+
+            var folderResults = linter.lintFolder(arguments.folder);
+            results.append(folderResults, true);
+        }
+    
             
             // Output results
             var outputFormat = arguments.format;
@@ -95,7 +125,7 @@ component {
                 out("Rules loaded: " & arrayLen(linter.getEnabledRules()));
                 out("");
             }
-          
+            
             var formattedResults = linter.formatResults(results, outputFormat);
             
             out(formattedResults);

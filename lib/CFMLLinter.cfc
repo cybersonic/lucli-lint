@@ -43,12 +43,63 @@ component {
             throw(type="InvalidFile", message="Not a valid file: " & arguments.filePath);
         }
         
+        try{
+            var ast = astFromPath(arguments.filePath);
+            return lintAST(ast, arguments.filePath);
+        }
+        catch(e){
+            var ErrorLintResult = createObject("component", "lib.LintResult").init(
+                    rule: {
+                        getRuleCode: function(){ return "AST_PARSE_ERROR"; },
+                        getRuleName: function(){ return "AST Parser"; },
+                        getDescription: function(){ return "Error parsing AST"; },
+                        getSeverity: function(){ return "FAILURE"; },
+                        getMessage: function(){ return "Error parsing AST: " & e.message; }
+                    },
+                    node: {
+                        start: { line: 0, column: 0, offset: 0 },
+                        end: { line: 0, column: 0, offset: 0 }
+                    },
+                    fileName: arguments.filePath,
+                    fileContent: ""
+                );
+            
+            var TagContext = e.TagContext ?: [];
+            if(ArrayLen(TagContext)){
+                ErrorLintResult.setLine(TagContext[1].line?:0);
+                ErrorLintResult.setCode(TagContext[1].codePrintPlain?:"");
+                ErrorLintResult.setColumn(TagContext[1].column ?: 0);
+            }
+            return [
+                ErrorLintResult
+            ];
+        }
         // Parse the file using Lucee's AST parser
-        var ast = astFromPath(arguments.filePath);
-        
-        return lintAST(ast, arguments.filePath);
     }
-    
+    /**
+     * Lint all CFML files in a folder (recursively)
+     * @param folderPath Path to the folder to lint
+     * @return Array of LintResult objects
+     */
+    function lintFolder(required string folderPath) {
+        var results = [];
+        var errors = [];
+        if (!directoryExists(arguments.folderPath)) {
+            throw(type="DirectoryNotFound", message="Directory not found: " & arguments.folderPath);
+        }
+        // Recursively get all .cfm and .cfc files in the folder
+        var files = directoryList(
+                                path:arguments.folderPath,
+                                recurse: true,
+                                listInfo: "array",
+                                filter="*.cf*");
+
+        for (var row in files) {
+            var fileResults = lintFile(row);
+            results.append(fileResults, true);
+        }
+        return results;
+    }
     /**
      * Lint an already parsed AST
      * @param ast The parsed AST structure
@@ -66,12 +117,13 @@ component {
         
         // Run all enabled rules
         for (var rule in rules) {
-                try {
+              
                     var ruleResults = rules[rule].check(
-                        node:arguments.ast,
+                        node: arguments.ast,
                         helper: variables.astHelper,
                         filename: arguments.fileName,
-                        fileContent: fileContent);
+                        fileContent: fileContent
+                        );
 
                     if (isArray(ruleResults)) {
                         arrayAppend(results, ruleResults, true);
@@ -79,9 +131,7 @@ component {
                     else {
                         arrayAppend(results, ruleResults);
                     }
-                } catch (any e) {
-                    echo(e.stackTrace);
-                }
+               
         }
         
         // Sort results by severity and location
@@ -206,6 +256,7 @@ component {
             errors: 0,
             warnings: 0,
             info: 0,
+            failure: 0,
             ruleBreakdown: {}
         };
         
@@ -220,6 +271,9 @@ component {
                     break;
                 case "INFO":
                     summary.info++;
+                    break;
+                case "FAILURE":
+                    summary.failure++;
                     break;
             }
             
@@ -265,7 +319,7 @@ component {
         arrayAppend(output, "CFML Linter Results");
         arrayAppend(output, "====================");
         arrayAppend(output, "Total issues: " & summary.total);
-        arrayAppend(output, "Errors: " & summary.errors & ", Warnings: " & summary.warnings & ", Info: " & summary.info);
+        arrayAppend(output, "Errors:  #summary.errors# , Warnings:  #summary.warnings# , Info:  #summary.info#, Failures:  #summary.failure#");
         arrayAppend(output, "");
         
         for (var result in arguments.results) {
@@ -314,6 +368,7 @@ component {
         arrayAppend(xml, "    <errors>" & summary.errors & "</errors>");
         arrayAppend(xml, "    <warnings>" & summary.warnings & "</warnings>");
         arrayAppend(xml, "    <info>" & summary.info & "</info>");
+        arrayAppend(xml, "    <failure>" & summary.failure & "</failure>");
         arrayAppend(xml, "  </summary>");
         
         arrayAppend(xml, "  <issues>");

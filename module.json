@@ -1,6 +1,6 @@
 {
   "name": "lint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A linter for lucli",
   "author": "Mark Drew",
   "license": "MIT",

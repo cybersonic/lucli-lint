@@ -1,25 +1,29 @@
-component {
+component{
     /**
      * CFML Parser and Linter Module
      * 
      * This is the main entry point for the CFML linting module.
      * It uses Lucee's built-in AST parser and applies configurable linting rules.
      */
+    
     function init(
         verbose=false,
-        timing=false,
-        cwd=""
+        timingEnabled=false,
+        cwd="",
+        timer,
+        
     ) {
         variables.verbose = arguments.verbose;
-        variables.timing = arguments.timing;
+        variables.timingEnabled = arguments.timingEnabled;
         variables.cwd = arguments.cwd;
-        // TOOD
-        // verbose(serializeJSON(arguments))
-        // timing.start(serializeJSON(arguments))
-        // timing.end(serializeJSON(arguments))
+        variables.timer = arguments.timer ?: {
+            start = function(name){},
+            stop = function(name){}
+        };
         
         return this;
     }
+
 
     /**
      * main entry point
@@ -29,6 +33,7 @@ component {
      * @format format of the output (text, json, xml, silent (for tests))
      * @rules comma-separated list of rules to apply, if left empty, it will look for rules in config file or use all enabled rules
      * @config path to config file, if not provided, it will look for cflinter.json in the current directory of the file or folder
+     * @compact boolean whether to compact the JSON output (default: true)
      * @return struct with linting results
      */
     function main(
@@ -36,7 +41,8 @@ component {
         string folder="",
         string format = "json",
         string rules = "",
-        string config = ""
+        string config = "",
+        boolean compact = true
         ) {
 
         if(variables.verbose){
@@ -49,6 +55,9 @@ component {
             out("config = " & arguments.config);
         }
         
+        // out( variables );
+       
+        variables.Timer.start("CFML Linting Process");
 
         // File or Folder is required
         if(!len(file) && !len(folder)){
@@ -56,8 +65,13 @@ component {
             return showHelp();
         }
 
+          variables.Timer.stop("CFML Linting Process");
         //Create the rule configuration (with all the rules)
-        var configPath = Len(arguments.config) ? arguments.config : getDirectoryFromPath(variables.cwd) & "cflinter.json";
+        // .cflint.json
+        // cfmllint.rc
+        // if we find a CFLint we might be able to use that too 
+        var configPath = Len(arguments.config) ? arguments.config : variables.cwd & "/.lucli-lint.json";
+        
         
         var RuleConfig = nullValue();
         if (fileExists(configPath)) {
@@ -65,7 +79,6 @@ component {
         } else {
             RuleConfig = createObject("component", "lib.RuleConfiguration").init();
         }
-               
 
         // If specific rules are provided, enable only those
         if(len(arguments.rules)){
@@ -75,7 +88,7 @@ component {
 
         // Create linter 
         var linter = createObject("component", "lib.CFMLLinter").init(RuleConfig);        
-            
+            linter.setCWD( variables.cwd ); //Pass the working dir
         
 
         // Check if the folder or file path is relative , or absolute
@@ -96,6 +109,7 @@ component {
             }
 
             var fileResults = linter.lintFile(arguments.file);
+            // Should return something else, including how manyu files we did.
             results.append(fileResults, true);
         }
 
@@ -108,29 +122,29 @@ component {
             } else {
                 arguments.folder = folderPath.getAbsolutePath();
             }
-
             var folderResults = linter.lintFolder(arguments.folder);
-            results.append(folderResults, true);
+            // dump(var=folderResults.results, label="Folder results");
+            ArrayAppend(results, folderResults.results, true);
         }
-    
+        // dump(results);
             
-            // Output results
-            var outputFormat = arguments.format;
-            if(outputFormat == "text"){
-                if(!isEmpty(arguments.file)){
-                    out("Linting file: " & arguments.file);
-                } else if(!isEmpty(arguments.folder)){
-                    out("Linting folder: " & arguments.folder);
-                }
-                out("Rules loaded: " & arrayLen(linter.getEnabledRules()));
-                out("");
+        // Output results
+        var outputFormat = arguments.format;
+        if(outputFormat == "text"){
+            if(!isEmpty(arguments.file)){
+                out("Linting file: " & arguments.file);
+            } else if(!isEmpty(arguments.folder)){
+                out("Linting folder: " & arguments.folder);
             }
-            
-            var formattedResults = linter.formatResults(results, outputFormat);
-            
-            out(formattedResults);
-            
-            return results;
+            out("Rules loaded: " & arrayLen(linter.getEnabledRules()));
+            out("");
+        }
+        
+        var formattedResults = linter.formatResults(results, outputFormat, compact);
+        
+        out(formattedResults);
+        
+        return results;
             
         // } catch (any e) {
         //     dump(e);
@@ -196,11 +210,19 @@ component {
         
         out("CFML Linter Module Help:");
         out("=========================");
-        out("Usage: lucli cfml_parser/Module.cfc file=<file_path> [options]");
+        out("Usage: lucli lint [options]");
         out("Options:");
-        out("  format=text|json|xml  Output format (default: text)");
+        out("  file=<file>      Path to the file to lint");
+        out("  folder=<folder>  Path to the folder to lint");
+        out("  format=text|json|xml|bitbucket  Output format (default: text)");
         out("  rules=<rules>      Only run specified rules (comma-separated)");
         return "Help information displayed";
+    }
+
+    function verbose(any message){
+        if(variables.verbose){
+            out(message);
+        }
     }
     
 }

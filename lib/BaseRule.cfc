@@ -4,7 +4,7 @@
  * Abstract base class for all CFML linting rules
  * All rules should extend this class and implement the check() method
  */
-component accessors="true" {
+abstract component accessors=true {
     
     // Rule metadata
     property name="ruleCode" type="string";
@@ -15,6 +15,7 @@ component accessors="true" {
     property name="group" type="string" default="General"; // BugProne, Security, CodeStyle, etc.
     property name="enabled" type="boolean" default="true";
     property name="parameters" type="struct";
+    property name="nodetype" type="String" default="";
 
    
     /**
@@ -26,9 +27,9 @@ component accessors="true" {
      * @param fileName The name of the file being checked
      * @return Array of LintResult objects
      */
-    function check(required struct node, required any helper, string fileName = "", string fileContent = "") {
-        throw(type="NotImplemented", message="check() method must be implemented by subclasses");
-    }
+    abstract function check(required struct node, required any helper, string fileName = "", string fileContent = "");
+
+
     
     /**
      * Check if this rule is enabled

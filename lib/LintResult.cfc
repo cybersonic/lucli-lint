@@ -10,7 +10,6 @@ component accessors="true" {
     property name="ruleDescription" type="string";
     property name="severity" type="string"; // ERROR, WARNING, INFO, FAILURE
     property name="message" type="string";
-    property name="fileName" type="string";
     property name="line" type="numeric";
     property name="column" type="numeric";
     property name="offset" type="numeric";
@@ -19,6 +18,13 @@ component accessors="true" {
     property name="endOffset" type="numeric";
     property name="code" type="string";
     property name="variable" type="string";
+    property name="stackTrace" type="string" default="";
+    
+    
+    property name="rule" type="any" default="";
+    property name="node" type="any";
+    property name="fileName" type="string";
+    property name="fileContent" type="string" default="";
 
     
     function init(
@@ -30,6 +36,12 @@ component accessors="true" {
 
     ) {
        
+        // Main parts
+        setRule(arguments.rule);
+        setNode(arguments.node);
+        setFileName(arguments.fileName);
+        setFileContent(arguments.fileContent);
+        
         // Here is where we do the actual work
         setRuleCode(arguments.rule.getRuleCode());
         setRuleName(arguments.rule.getRuleName());
@@ -43,20 +55,23 @@ component accessors="true" {
         setEndLine(arguments.node.end.line);
         setEndColumn(arguments.node.end.column);
         setEndOffset(arguments.node.end.offset);
+        
+        setCodeContents();
 
-        try{
-            var start = arguments.node.start.offset < 1 ? 1 : arguments.node.start.offset;
-            var count = arguments.node.end.offset - start;
-            setCode(Mid(arguments.fileContent, start, count));
+        return this;
+    }
+
+
+    function setCodeContents(){
+    try{
+
+            var start = getNode().start.offset < 1 ? 1 : getNode().start.offset + 1;
+            var count = getNode().end.offset - start + 1;
+            setCode(Mid(getFileContent(), start, count));
 
         }
         catch(e){
-            dump(e);
-            dump(arguments);
         }
-        // setVariable(arguments.variable);
-
-        return this;
     }
     
     /**
@@ -89,6 +104,7 @@ component accessors="true" {
             "endcolumn": variables.endcolumn,
             "endOffset": variables.endOffset,
             "code": variables.code,
+            "stackTrace": variables.stackTrace
         };
     }
     

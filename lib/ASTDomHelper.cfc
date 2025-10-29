@@ -106,6 +106,12 @@ component {
                 continue;
             }
         }
+
+        matchingAssignments = matchingAssignments.filter(
+            function(item){
+                return item.start.line <= fromNode.start.line;
+            }
+        );
         return matchingAssignments;
     }
 
@@ -132,7 +138,7 @@ component {
         }
 
 
-       
+
         if(isArray(root.body?:nullValue())){
             for(var item in root.body){
                 results.append( getNodesByType(item, type), true);
@@ -305,5 +311,48 @@ component {
         var endLine = structKeyExists(node.end, "line") ? node.end.line : 0;
         
         return endLine - startLine + 1;
+    }
+
+    /**
+     * Find the parent node of a given node
+     */
+    function findNodeParent(required struct node){
+        var parent = variables.parseResult;
+        traverseNode(variables.parseResult, function(currentNode) {
+            // dump(var=parent, label="parent");
+            // dump(var=node, label="node to find parent for");
+            // dump(var=currentNode, label="currentNode");
+            if(currentNode.keyExists("start")){
+
+            }
+            try {
+                if(currentNode.keyExists("start") && currentNode.start.line == node.start.line ){
+                    return;
+                }
+            }
+            catch (e) {
+                dump(e);
+                dump(var=node, label="node to find parent for");
+                dump(var=currentNode, label="currentNode");
+                abort;
+            }
+            
+            // for(var key in currentNode){
+            //     var value = currentNode[key];
+            //     if(isArray(value)){
+            //         for(var item in value){
+            //             if(item EQ node){
+            //                 parent = currentNode;
+            //             }
+            //         }
+            //     }
+            //     else if(isStruct(value)){
+            //         if(value EQ node){
+            //             parent = currentNode;
+            //         }
+            //     }
+            // }
+        });
+        return parent;
     }
 }

@@ -3,12 +3,16 @@
  * 
  * Manages configuration for linting rules including enabled/disabled status and parameters
  */
-component {
+component accessors="true" {
     
     property name="ruleSettings" type="struct" default="#{}#";
     property name="globalSettings" type="struct" default="#{}#";
     property name="rules" type="struct" default="#{}#";
-    
+    property name="ignoreFiles" type="array" default="#[]#";
+    property name="rulesByNodeType" type="struct" default="#{}#";
+
+
+
     function init(string configFile = "") {
         variables.ruleSettings = {};
         variables.globalSettings = {
@@ -22,18 +26,24 @@ component {
             loadConfigurationFromFile(arguments.configFile);
         }
          // Add all the installed rules
-        var rulesPath = expandPath("./rules/");
-        var rules = directoryList(expandPath("./lib/rules/"), false, "name", "*.cfc");
+        
+        var rules = directoryList("#getDirectoryFromPath(getCurrentTemplatePath())#/rules/", false, "name", "*.cfc");
         for(var ruleClass in rules) {
             
             var ruleName = listFirst(ruleClass, ".");
-            var rule = createObject("component", "lib.rules.#ruleName#").init();
+            var rule = createObject("component", "rules.#ruleName#").init();
             var ruleCode = rule.getRuleCode();
             if(variables.ruleSettings.KeyExists(ruleCode)){
                 // Override the paramters from the config
                 rule.setParameters(variables.ruleSettings[ruleCode]);
             }
             variables.rules[ruleCode] = rule; 
+
+            // Group them by type
+            if(not structKeyExists(variables.rulesByNodeType, rule.getNodeType())){
+                variables.rulesByNodeType[rule.getNodeType()] = [];
+            }
+            variables.rulesByNodeType[rule.getNodeType()].append(rule);
         }
 
         return this;
@@ -56,6 +66,11 @@ component {
             // Load rule settings
             if (structKeyExists(config, "rules")) {
                 variables.ruleSettings = config.rules;
+            }
+
+            // Load ignore files glob patterns
+            if (structKeyExists(config, "ignoreFiles")) {
+                variables.ignoreFiles = config.ignoreFiles;
             }
             
         } catch (any e) {
@@ -82,6 +97,9 @@ component {
     }
 
 
+    public array function getRulesByNodeType(required string nodeType){
+        return variables.rulesByNodeType[arguments.nodeType] ?: [];
+    }
 
 
     public struct function getEnabledRules(){

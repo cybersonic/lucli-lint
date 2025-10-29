@@ -3,12 +3,16 @@
  * 
  * Main linting engine that orchestrates AST parsing and rule execution
  */
-component {
+component accessors="true" {
     
     property name="rules" type="array";
     property name="ruleConfiguration" type="any";
     property name="astHelper" type="any";
-    
+    property name="cwd" type="string" default="";
+    variables.filenameUtils = createObject("java", "org.apache.commons.io.FilenameUtils");
+
+
+
     function init(any ruleConfiguration) {
         variables.rules = [];
         
@@ -27,8 +31,9 @@ component {
      * @param filePath Path to the CFML file to lint
      * @return Array of LintResult objects
      */
-    function lintFile(required string filePath) {
+    public array function lintFile(required string filePath) {
 
+      
         if (!fileExists(arguments.filePath)) {
             // Try to expand it
             if(!fileExists(expandPath(arguments.filePath))) {
@@ -39,16 +44,15 @@ component {
             // throw(type="FileNotFound", message="File not found: " & arguments.filePath);
         }
 
-        if(!fileExists(arguments.filePath)){
-            throw(type="InvalidFile", message="Not a valid file: " & arguments.filePath);
-        }
-        
         try{
             var ast = astFromPath(arguments.filePath);
-            return lintAST(ast, arguments.filePath);
+            var lintResults = lintAST(ast, arguments.filePath);
+            return lintResults;
         }
         catch(e){
-            var ErrorLintResult = createObject("component", "lib.LintResult").init(
+            dump(e);
+            abort;
+            var ErrorLintResult = createObject("component", "LintResult").init(
                     rule: {
                         getRuleCode: function(){ return "AST_PARSE_ERROR"; },
                         getRuleName: function(){ return "AST Parser"; },
@@ -69,6 +73,7 @@ component {
                 ErrorLintResult.setLine(TagContext[1].line?:0);
                 ErrorLintResult.setCode(TagContext[1].codePrintPlain?:"");
                 ErrorLintResult.setColumn(TagContext[1].column ?: 0);
+                ErrorLintResult.setStackTrace(e.stackTrace ?: "");
             }
             return [
                 ErrorLintResult
@@ -81,9 +86,10 @@ component {
      * @param folderPath Path to the folder to lint
      * @return Array of LintResult objects
      */
-    function lintFolder(required string folderPath) {
+    public struct function lintFolder(required string folderPath) {
         var results = [];
         var errors = [];
+        var filesScanned = []
         if (!directoryExists(arguments.folderPath)) {
             throw(type="DirectoryNotFound", message="Directory not found: " & arguments.folderPath);
         }
@@ -92,13 +98,41 @@ component {
                                 path:arguments.folderPath,
                                 recurse: true,
                                 listInfo: "array",
-                                filter="*.cf*");
-
+                                filter=pathFilter,
+                                type="file",
+                                sort: "asc"
+                                );
         for (var row in files) {
             var fileResults = lintFile(row);
+            // dump(var=fileResults, label="File results for #row#");
             results.append(fileResults, true);
         }
-        return results;
+
+        // dump(var=results, label="Final results");
+        return {
+            results: results,
+            filesScanned: files,
+            errors: errors
+        };
+    }
+
+
+
+
+    // This is used by directoryList to filter paths
+    private function pathFilter(path,type,ext){
+
+        if(!arrayContains(["cfm","cfc","cfs"],arguments.ext)){
+            return false;
+        }
+        var ignorePatterns = getruleConfiguration().getIgnoreFiles();
+        
+        for(var ignoredPattern in ignorePatterns){
+            if(variables.filenameUtils.wildcardMatch(path, ignoredPattern)){
+                return false;
+            }
+        }
+        return true;
     }
     /**
      * Lint an already parsed AST
@@ -106,7 +140,7 @@ component {
      * @param fileName File name for reporting
      * @return Array of LintResult objects  
      */
-    function lintAST(required struct ast, string fileName = "") {
+    array function lintAST(required struct ast, string fileName = "") {
         var results = [];
         
         // Create AST helper
@@ -114,32 +148,80 @@ component {
         
         var rules = variables.ruleConfiguration.getEnabledRules();
         var fileContent = FileRead(fileName);
-        
-        // Run all enabled rules
-        for (var rule in rules) {
-              
-                    var ruleResults = rules[rule].check(
-                        node: arguments.ast,
-                        helper: variables.astHelper,
-                        filename: arguments.fileName,
-                        fileContent: fileContent
-                        );
 
-                    if (isArray(ruleResults)) {
-                        arrayAppend(results, ruleResults, true);
-                    }
-                    else {
-                        arrayAppend(results, ruleResults);
-                    }
-               
-        }
-        
-        // Sort results by severity and location
-        results = sortResults(results);
-        
-        return results;
+        var recursiveResults = recursiveNodeParser(
+                node: arguments.ast,
+                document: arguments.ast,
+                fileName: arguments.fileName,
+                fileContent: fileContent,
+                helper: variables.astHelper,
+                allrules: rules
+                );
+
+        return recursiveResults;
     }
     
+
+
+    array function recursiveNodeParser(
+            required struct node, 
+            required struct document, 
+            string fileName="",
+            string fileContent="",
+            required any helper,
+            struct allrules = {}
+            )
+    {
+        var results = []
+
+        
+        for(var rule in arguments.allrules){
+            var ruleResults = arguments.allrules[rule].check(
+                node: arguments.node,
+                helper: variables.astHelper,
+                filename: arguments.fileName,
+                fileContent: fileContent
+                );
+            results.append(ruleResults, true);
+        }
+
+        if(!StructKeyExists(node, "body")){
+            return results;
+        }
+        if(isArray(node.body)){
+            for(var childNode in node.body){
+                var child_results = recursiveNodeParser(
+                    node: childNode,    
+                    document: arguments.document,
+                    fileName: arguments.fileName,
+                    fileContent: fileContent,
+                    helper: arguments.helper,
+                    allrules: arguments.allrules
+                    );
+                results.append(child_results, true);
+            }
+            
+        }
+        elseif(isStruct(node.body) && node.body.keyExists("body") && isArray(node.body.body)){ 
+
+                for(var childNode in node.body.body){
+                    var child_results = recursiveNodeParser(
+                        node: childNode,
+                        document: arguments.document,
+                        fileName: arguments.fileName,
+                        fileContent: fileContent,
+                        helper: arguments.helper,
+                        allrules: arguments.allrules
+                        );
+                    results.append(child_results, true);
+            }
+        }
+        else {
+            throw("Unknown node body type: " & getMetaData(node.body).name);
+        }
+        return results;
+
+    }
     /**
      * Add a rule to the linter
      * @param rule The rule instance to add
@@ -252,12 +334,12 @@ component {
      */
     function generateSummary(required array results) {
         var summary = {
-            total: arrayLen(arguments.results),
-            errors: 0,
-            warnings: 0,
-            info: 0,
-            failure: 0,
-            ruleBreakdown: {}
+            "total": arrayLen(arguments.results),
+            "errors": 0,
+            "warnings": 0,
+            "info": 0,
+            "failure": 0,
+            "ruleBreakdown": {}
         };
         
         for (var result in arguments.results) {
@@ -293,10 +375,10 @@ component {
      * @param format Output format ("text", "json", "xml")
      * @return Formatted string
      */
-    function formatResults(required array results, string format = "text") {
+    function formatResults(required array results, string format = "text", boolean compact = true) {
         switch(arguments.format) {
             case "json":
-                return formatResultsAsJSON(arguments.results);
+                return formatResultsAsJSON(arguments.results, arguments.compact );
             case "xml":
                 return formatResultsAsXML(arguments.results);
             case "bitbucket":
@@ -341,16 +423,18 @@ component {
     /**
      * Format results as JSON
      */
-    function formatResultsAsJSON(required array results) {
+    function formatResultsAsJSON(required array results, boolean compact = true) {
         var jsonResults = [];
         for (var result in arguments.results) {
             arrayAppend(jsonResults, result.toStruct());
         }
         
-        return serializeJSON({
+        return serializeJSON(var:{
             "summary": generateSummary(arguments.results),
             "results": jsonResults
-        });
+        },
+        compact: arguments.compact);
+        // TODO: make sure we can choose whetere the options has compact or not
     }
     
     /**

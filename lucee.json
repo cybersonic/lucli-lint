@@ -1,6 +1,6 @@
 {
   "name" : "lucee-lint",
-  "version" : "7.0.1.44-SNAPSHOT",
+  "version" : "7.0.1.51-SNAPSHOT",
   "port" : 8000,
   "webroot" : "./",
   "monitoring" : {

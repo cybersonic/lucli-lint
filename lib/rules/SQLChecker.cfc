@@ -13,6 +13,8 @@ component extends="../BaseRule" {
         variables.severity = "WARNING";
         variables.message = "Found SQL query and related variables in code";
         variables.group = "OptionalRules";
+        variables.enabled = false;
+        // variables.nodeTypes = "CFMLTag,CallExpression,AssignmentExpression"
 
 
         variables.parameters = {
@@ -27,8 +29,6 @@ component extends="../BaseRule" {
      */
     function check(required struct node, required any helper, string fileName = "", string fileContent="") {
         var results = [];
-        
-      
         // Check we are in a query node, works for both tag and function call;
         var isQueryNode = (
                             (node.type == "CFMLTag" && node.name == "query") //Query Tags
@@ -63,7 +63,6 @@ component extends="../BaseRule" {
         if( not listFindNoCase( variables.parameters.extensions, ext ) ){
             return results;
         }
-
         
         var sqlVariable = "";
         var hasSQLVariables = false;

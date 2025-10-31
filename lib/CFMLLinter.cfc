@@ -9,7 +9,16 @@ component accessors="true" {
     property name="ruleConfiguration" type="any";
     property name="astHelper" type="any";
     property name="cwd" type="string" default="";
+    property name="timer" type="any" default="#{}#";
+
+    //Helper libs    
     variables.filenameUtils = createObject("java", "org.apache.commons.io.FilenameUtils");
+    variables.fileSystems = createObject("java", "java.nio.file.FileSystems").getDefault();
+    variables.paths = createObject("java", "java.nio.file.Paths");
+    // variables.cwdPath = variables.paths.get(variables.cwd, []);
+
+
+;
 
 
 
@@ -50,8 +59,9 @@ component accessors="true" {
             return lintResults;
         }
         catch(e){
-            dump(e);
-            abort;
+            if(variables.ruleConfiguration.getGlobalSetting("ignoreParseErrors", false)){
+                return [];
+            }
             var ErrorLintResult = createObject("component", "LintResult").init(
                     rule: {
                         getRuleCode: function(){ return "AST_PARSE_ERROR"; },
@@ -125,13 +135,19 @@ component accessors="true" {
         if(!arrayContains(["cfm","cfc","cfs"],arguments.ext)){
             return false;
         }
-        var ignorePatterns = getruleConfiguration().getIgnoreFiles();
-        
+        var ignorePatterns = getRuleConfiguration().getIgnoreFiles();
+        var isIgnored = false;
+
         for(var ignoredPattern in ignorePatterns){
-            if(variables.filenameUtils.wildcardMatch(path, ignoredPattern)){
+            var pathMatcher = variables.fileSystems.getPathMatcher("glob:" & ignoredPattern)
+            var thePath = variables.paths.get(arguments.path, []);
+
+            if(pathMatcher.matches(thePath)){
                 return false;
             }
+        
         }
+        
         return true;
     }
     /**
@@ -173,15 +189,16 @@ component accessors="true" {
             )
     {
         var results = []
-
-        
         for(var rule in arguments.allrules){
+            var ruleItem = "Rule: #rule#"; 
+            variables.timer._start(ruleItem);
             var ruleResults = arguments.allrules[rule].check(
                 node: arguments.node,
                 helper: variables.astHelper,
                 filename: arguments.fileName,
                 fileContent: fileContent
                 );
+            variables.timer._stop(ruleItem);
             results.append(ruleResults, true);
         }
 
@@ -386,6 +403,10 @@ component accessors="true" {
                 return formatResultsAsBitbucket(arguments.results);
             case "silent":
                 return ""; // No output
+
+            case "tsc":
+                // Placeholder for TSC format
+                return formatResultsAsTSC(arguments.results);
             default:
                 return formatResultsAsText(arguments.results);
         }
@@ -405,7 +426,7 @@ component accessors="true" {
         arrayAppend(output, "");
         
         for (var result in arguments.results) {
-            var line = result.getSeverity() & " - " & result.getFileName();
+            var line = result.getSeverity() & " - " & result.getFileName() & ":#result.getLine()#:#result.getColumn()#";
             if (result.getLine() > 0) {
                 line &= " (line " & result.getLine();
                 if (result.getColumn() > 0) {
@@ -414,6 +435,7 @@ component accessors="true" {
                 line &= ")";
             }
             line &= ": [" & result.getRuleCode() & "] " & result.getFormattedMessage();
+            // line &= result.getCode();
             arrayAppend(output, line);
         }
         
@@ -473,49 +495,169 @@ component accessors="true" {
     }
 
     /**
+     * Returns the result in gcc format so that vscode can use them directly.
+     *
+     * @results 
+     */
+    function formatResultsAsTSC(required array results) {
+        var output = [];
+
+        // src/test.cfs(10,5): error: Variable 'foo' is not defined
+        for (var result in arguments.results) {
+            // var line = result.getFileName() & "(" & result.getLine() & "," & result.getColumn() & "): " & lcase(result.getSeverity()) & ": [" & result.getRuleCode() & "] " & result.getFormattedMessage();
+            var line = "#result.getFileName()#(#result.getLine()#,#result.getColumn()#,#result.getEndLine()#,#result.getEndColumn()#): #lcase(result.getSeverity())#: [ #result.getRuleCode()# ]  #result.getFormattedMessage()#";
+            arrayAppend(output, line);
+        }
+        return arrayToList(output, chr(10));
+    }
+
+    /**
      * Format results as Bitbucket Report
+     *  The bitbucekt report should look like this (see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-reports/#api-repositories-workspace-repo-slug-commit-commit-reports-reportid-put):
+        * {
+            "type": "<string>", 
+            "uuid": "<string>",
+            "title": "<string>",
+            "details": "<string>",
+            "external_id": "<string>",
+            "reporter": "<string>",
+            "link": "<string>",
+            "remote_link_enabled": true,
+            "logo_url": "<string>",
+            "report_type": "SECURITY", #report_type: SECURITY, COVERAGE, TEST, BUG 
+            "result": "PASSED", #result: PASSED, FAILED, PENDING
+            "data": [
+                {
+                "type": "BOOLEAN", #data.type: BOOLEAN, DATE, DURATION, LINK, NUMBER, PERCENTAGE, TEXT#
+                "title": "<string>",
+                "value": {}
+                }
+            ],
+            "created_on": "<string>",
+            "updated_on": "<string>"
+            }
+     * 
+     * There is a separate call to add annotations. we could add them to report.annotaions = [], so that report is in one file. 
+     * see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-reports/#api-repositories-workspace-repo-slug-commit-commit-reports-reportid-annotations-post
+     * Note: annotation_type and summary are the only mandatory fields in the payload.
+     * An annotation looks like:
+     * 
+     * {
+            "type": "<string>", 
+            "external_id": "<string>",
+            "uuid": "<string>",
+            "annotation_type": "VULNERABILITY",  #annotation_type: VULNERABILITY, CODE_SMELL, BUG
+            "path": "<string>",
+            "line": 199,
+            "summary": "<string>",
+            "details": "<string>",
+            "result": "PASSED", #result: PASSED, FAILED, IGNORED, SKIPPED 
+            "severity": "CRITICAL",
+            "link": "<string>",
+            "created_on": "<string>",
+            "updated_on": "<string>"
+        }
+     * 
      */
     function formatResultsAsBitbucket(required array results) {
         // Bitbucket Code Insights format
-        var bitbucketReport = {
-            "title": "CFML Linter Report",
+        var bitbucketReport = {       
+            "title": "Linter Report",
             "details": "Static analysis results for CFML code",
-            "result": "PASS", // Will be set to FAIL if there are errors
-            "data": []
-        };
+            "type": "COVERAGE",
+            "report_type": "COVERAGE",
+            "result": "FAILED",
+            "reporter": "LuCLI Linter",
+            "reporter_link": "https://github.com/cybersonic/lucli-lint",
+            "data": [],
+            "annotations": []
+        }
         
+        // the path for each item has to be relative to the cwd/repo root
         var summary = generateSummary(arguments.results);
+        bitbucketReport.data = [
+            {
+                "type": "NUMBER",
+                "title": "Total Issues",
+                "value": summary.total
+            },
+            {
+                "type": "NUMBER",
+                "title": "Errors",
+                "value": summary.errors
+            },
+            {
+                "type": "NUMBER",
+                "title": "Warnings",
+                "value": summary.warnings
+            },
+            {
+                "type": "NUMBER",
+                "title": "Info",
+                "value": summary.info
+            },
+            {
+                "type": "NUMBER",
+                "title": "Failures",
+                "value": summary.failure
+            }
+        ];
+
+
         
         // Set result based on error count
-        if (summary.errors > 0) {
+        if (summary.errors > 0 OR summary.failure > 0) {
             bitbucketReport.result = "FAIL";
         }
         
+        var count = 0;
+        // for each result, create an annotation
         // Convert lint results to Bitbucket annotations format
         for (var result in arguments.results) {
+            // TODO: check windows vs unix paths
+            var relativePath = Right(
+                result.getFileName(),
+                Len(result.getFileName()) - Len(variables.filenameUtils.normalize(variables.cwd & "/")) + 1
+                );
+
+            //If we forgot the front slash, remove it    
+            if(Left(relativePath,1) EQ "/" ){
+                relativePath = Mid(relativePath,2);
+            }
+
+            count++;
             var annotation = {
-            "path": result.getFileName(),
-            "line": result.getLine(),
-            "message": "[" & result.getRuleCode() & "] " & result.getFormattedMessage(),
-            "severity": lcase(result.getSeverity()), // Bitbucket uses lowercase
-            "type": "CODE_SMELL" // Default type, could be BUG for errors
+                "external_id": "lucee_lint_report-#numberFormat(count, "000")#",
+                "title": "[" & result.getRuleCode() & "] " & result.getFormattedMessage(),
+                "annotation_type": "CODE_SMELL", //TODO: map type 
+                "summary": result.getCode(),
+                "path": relativePath,
+                "severity": uCase(result.getSeverity()),
+                "line": result.getLine()
             };
             
             // Map severity to Bitbucket types
-            if (result.getSeverity() == "ERROR") {
-            annotation.type = "BUG";
-            annotation.severity = "high";
+            if (result.getSeverity() == "ERROR" OR result.getSeverity() == "FAILURE") {
+                annotation.type = "BUG";
+                annotation.severity = "HIGH";
             } else if (result.getSeverity() == "WARNING") {
-            annotation.type = "CODE_SMELL";
-            annotation.severity = "medium";
+                annotation.type = "CODE_SMELL";
+                annotation.severity = "MEDIUM";
             } else {
-            annotation.type = "CODE_SMELL";
-            annotation.severity = "low";
+                annotation.type = "CODE_SMELL";
+                annotation.severity = "LOW";
             }
             
-            arrayAppend(bitbucketReport.data, annotation);
+            arrayAppend(bitbucketReport.annotations, annotation);
         }
         
         return serializeJSON(bitbucketReport);
+    }
+
+    function out(any message){
+        if(!isSimpleValue(message)){
+            message = serializeJson(var=message, compact=false);
+        }
+        writeOutput(message & chr(10));
     }
 }

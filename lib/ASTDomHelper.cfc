@@ -331,10 +331,10 @@ component {
                 }
             }
             catch (e) {
-                dump(e);
-                dump(var=node, label="node to find parent for");
-                dump(var=currentNode, label="currentNode");
-                abort;
+                out(e);
+                out({var=node, label="node to find parent for"});
+                out({var=currentNode, label="currentNode"});
+                
             }
             
             // for(var key in currentNode){

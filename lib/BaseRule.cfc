@@ -17,6 +17,15 @@ abstract component accessors=true {
     property name="parameters" type="struct";
     property name="nodetype" type="String" default="";
 
+
+    static {
+        NODES = {
+            CFMLTAG = "CFMLTag",
+            CALLEXPRESSION = "CallExpression",
+            ASSIGNMENTEXPRESSION = "AssignmentExpression",
+            FUNCTIONDECLARATION = "FunctionDeclaration"
+        }
+    }
    
     /**
      * Main method to check AST node for violations
@@ -61,6 +70,9 @@ abstract component accessors=true {
      */
     function setParameters(required struct params) {
         for (var param in arguments.params){
+            if(param EQ "enabled"){
+                variables.enabled = arguments.params[param];
+            }
             setParameter(param, arguments.params[param]);
         }
         return this;

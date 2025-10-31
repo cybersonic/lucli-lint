@@ -1,0 +1,16 @@
+{
+    "global": {
+        "outputFormat": "text",
+        "showRuleNames": true,
+        "exitOnError": false,
+        "maxIssues": 0
+    },
+    "rules": {
+        "SQL_CHECK": {    
+            "enabled": true,
+            "parameters": {
+                "extensions": "cfm,cfc,cfml"
+            }
+        }
+    }
+}

@@ -10,6 +10,7 @@ component accessors="true" {
     property name="rules" type="struct" default="#{}#";
     property name="ignoreFiles" type="array" default="#[]#";
     property name="rulesByNodeType" type="struct" default="#{}#";
+    property name="timer" type="any" default="#{}#";
 
 
 
@@ -18,17 +19,19 @@ component accessors="true" {
         variables.globalSettings = {
             outputFormat: "text",
             showRuleNames: true,
+            ignoreParseErrors:false,
             exitOnError: false,
+
             maxIssues: 0 // 0 = unlimited
         }; 
 
         if (len(arguments.configFile) && fileExists(arguments.configFile)) {
             loadConfigurationFromFile(arguments.configFile);
         }
-         // Add all the installed rules
-        
+         // Load and configure all rules
         var rules = directoryList("#getDirectoryFromPath(getCurrentTemplatePath())#/rules/", false, "name", "*.cfc");
         for(var ruleClass in rules) {
+    
             
             var ruleName = listFirst(ruleClass, ".");
             var rule = createObject("component", "rules.#ruleName#").init();
@@ -38,14 +41,13 @@ component accessors="true" {
                 rule.setParameters(variables.ruleSettings[ruleCode]);
             }
             variables.rules[ruleCode] = rule; 
-
             // Group them by type
             if(not structKeyExists(variables.rulesByNodeType, rule.getNodeType())){
                 variables.rulesByNodeType[rule.getNodeType()] = [];
             }
             variables.rulesByNodeType[rule.getNodeType()].append(rule);
         }
-
+        // dump(var=variables, label="Updated rule settings" , abort=true);
         return this;
     }
     
@@ -103,9 +105,11 @@ component accessors="true" {
 
 
     public struct function getEnabledRules(){
-        return variables.rules.filter(function(key,value){
+        var enabled =  variables.rules.filter(function(key,value){
             return value.isEnabled();
         });
+        return enabled;
+        
     }
     
     /**
@@ -154,13 +158,15 @@ component accessors="true" {
      * @ruleCodes an array of rule codes to enable
      */
     function enableOnlyRules(required array ruleCodes) {
+
         // Disable all rules first
-        for (var ruleCode in structKeyArray(variables.rules)) {
-            setRuleEnabled(ruleCode, false);
-        }
-        // Enable only specified rules
-        for (var code in arguments.ruleCodes) {
-            setRuleEnabled(code, true);
+        for (var ruleCode in variables.rules) {
+            var ruleObj = variables.rules[ruleCode];
+            ruleObj.setEnabled(false);
+            
+            if(ruleCodes.contains(ruleObj.getRuleCode())){
+                ruleObj.setEnabled(true);
+            }
         }
         return this;
     }
@@ -218,6 +224,7 @@ component accessors="true" {
         }
         
         ruleSetting.parameters[arguments.paramName] = arguments.value;
+        
         
         return this;
     }
@@ -292,6 +299,7 @@ component accessors="true" {
         variables.globalSettings = {
             outputFormat: "text",
             showRuleNames: true,
+            ignoreParseErrors:false,
             exitOnError: false,
             maxIssues: 0
         };

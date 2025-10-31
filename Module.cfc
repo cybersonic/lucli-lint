@@ -17,8 +17,26 @@ component{
         variables.timingEnabled = arguments.timingEnabled;
         variables.cwd = arguments.cwd;
         variables.timer = arguments.timer ?: {
-            start = function(name){},
-            stop = function(name){}
+            _start = function(name){
+                if(variables.timingEnabled){
+                    out("Timer start: " & name);
+                }
+            },
+            _stop = function(name){
+                if(variables.timingEnabled){
+                    out("Timer stop: " & name);
+                }
+            },
+            start = function(name){
+                if(variables.timingEnabled){
+                    out("Timer start: " & name);
+                }
+            },
+            stop = function(name){
+                if(variables.timingEnabled){
+                    out("Timer stop: " & name);
+                }
+            }
         };
         
         return this;
@@ -39,7 +57,7 @@ component{
     function main(
         string file="",
         string folder="",
-        string format = "json",
+        string format = "text",
         string rules = "",
         string config = "",
         boolean compact = true
@@ -73,12 +91,16 @@ component{
         var configPath = Len(arguments.config) ? arguments.config : variables.cwd & "/.lucli-lint.json";
         
         
+        variables.timer.start("Load Rule Configuration");
         var RuleConfig = nullValue();
         if (fileExists(configPath)) {
             RuleConfig = createObject("component", "lib.RuleConfiguration").init(configPath);
         } else {
             RuleConfig = createObject("component", "lib.RuleConfiguration").init();
         }
+        // Add the timer for debugging
+        RuleConfig.setTimer( variables.Timer );
+        variables.timer.stop("Load Rule Configuration");
 
         // If specific rules are provided, enable only those
         if(len(arguments.rules)){
@@ -89,6 +111,7 @@ component{
         // Create linter 
         var linter = createObject("component", "lib.CFMLLinter").init(RuleConfig);        
             linter.setCWD( variables.cwd ); //Pass the working dir
+            linter.setTimer( variables.Timer ); //Pass the timer for debugging
         
 
         // Check if the folder or file path is relative , or absolute

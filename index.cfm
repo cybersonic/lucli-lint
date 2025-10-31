@@ -9,7 +9,7 @@
 
     );
     echo("<pre>");
-    ret = module.main(file="tests/rules/SQL_CHECK/test_02.cfm", format="json", rules="AVOID_USING_SQL");
+    ret = module.main(folder=".", format="text", rules="AVOID_USING_SQL");
     echo("</pre>");
     echo("Found #arrayLen(ret)# lint results");
     

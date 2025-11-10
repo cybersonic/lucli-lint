@@ -8,7 +8,7 @@ docker buildx create --name multiarch --use 2>/dev/null || docker buildx use mul
 
 # Build multi-platform images
 docker buildx build \
-    --platform linux/amd64,linux/arm/v7,linux/arm64/v8 \
+    --platform linux/amd64,linux/arm64/v8 \
     -t markdrew/lucli-lint:${VERSION} \
     -t markdrew/lucli-lint:latest \
     --push \

@@ -633,7 +633,9 @@ component accessors="true" {
                 "summary": result.getCode(),
                 "path": relativePath,
                 "severity": uCase(result.getSeverity()),
-                "line": result.getLine()
+                "line": result.getLine(),
+                // This is not part of the spec, but useful for linking back
+                "end_line": result.getEndLine()
             };
             
             // Map severity to Bitbucket types

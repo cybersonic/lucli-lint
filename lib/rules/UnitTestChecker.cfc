@@ -14,7 +14,7 @@ component extends="../BaseRule" {
         variables.message = "Found unit test and related variables in code";
         variables.group = "OptionalRules";
         variables.enabled = false;
-        variables.nodeTypes = "Program"; //Will only run once (in theory) per file
+        variables.nodeType = "Program"; //Will only run once per file
 
 
         variables.parameters = {

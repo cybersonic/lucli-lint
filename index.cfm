@@ -2,14 +2,14 @@
     echo("Starting linting process...#SERVER.lucee.version#<br/>");
     
     module = new Module(
-        verbose : false,
-        timing : true,
+        verboseEnabled : true,
+        timingEnabled : true,
         cwd : getDirectoryFromPath(getCurrentTemplatePath())
         
 
     );
     echo("<pre>");
-    ret = module.main(folder=".", format="text", rules="AVOID_USING_SQL");
+    ret = module.main(folder="tests/specs/artefacts", format="text", rules="UNIT_TEST_CHECK,SQL_CHECK");
     echo("</pre>");
     echo("Found #arrayLen(ret)# lint results");
     

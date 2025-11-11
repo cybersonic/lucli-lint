@@ -7,13 +7,13 @@ component{
      */
     
     function init(
-        verbose=false,
+        verboseEnabled=false,
         timingEnabled=false,
         cwd="",
         timer,
         
     ) {
-        variables.verbose = arguments.verbose;
+        variables.verboseEnabled = arguments.verboseEnabled;
         variables.timingEnabled = arguments.timingEnabled;
         variables.cwd = arguments.cwd;
         variables.timer = arguments.timer ?: {
@@ -63,7 +63,7 @@ component{
         boolean compact = true
         ) {
 
-        if(variables.verbose){
+        if(variables.verboseEnabled){
             out("CFML Linter Module initialized.");
             out("file = " & file);
             out("folder = " & folder);
@@ -159,8 +159,20 @@ component{
             } else if(!isEmpty(arguments.folder)){
                 out("Linting folder: " & arguments.folder);
             }
-            out("Rules loaded: " & arrayLen(linter.getEnabledRules()));
+
+            outline("Rules loaded: #RuleConfig.getEnabledRules().KeyList()#");
+            
             out("");
+            if(variables.verboseEnabled){
+                
+                outline("Rule Access Counts:");
+                var ruleAccessCount = linter.getRuleAccessCount();
+                
+                for(var rule in ruleAccessCount){
+                    out("   #rule# checked : #ruleAccessCount[rule]# times");
+                }
+                out("");
+            }
         }
         
         var formattedResults = linter.formatResults(results, outputFormat, compact);
@@ -192,8 +204,8 @@ component{
      */
     function showAvailableRules() {
         try {
-            out("Available CFML Linter Rules:");
-            out("==============================");
+            // out("Available CFML Linter Rules:");
+            outline("Available CFML Linter Rules:");
             
             // Create rules directly
             var rules = [
@@ -243,9 +255,25 @@ component{
     }
 
     function verbose(any message){
-        if(variables.verbose){
+        if(variables.verboseEnabled){
             out(message);
         }
+    }
+
+    function outline(string message, boolean bShowBorder=false){
+        var lineLength = message.len();
+        if(bShowBorder){
+            lineLength += 4;
+        } 
+        var border = repeatString("=", lineLength);
+        if(bShowBorder){
+            out(border);
+            out("| " & message & " |");
+        }
+        else{
+            out(message);
+        }
+        out(border);
     }
     
 }

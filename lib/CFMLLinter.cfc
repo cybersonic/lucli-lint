@@ -10,16 +10,13 @@ component accessors="true" {
     property name="astHelper" type="any";
     property name="cwd" type="string" default="";
     property name="timer" type="any" default="#{}#";
+    property name="ruleAccessCount" type="struct" default="#{}#";
 
     //Helper libs    
     variables.filenameUtils = createObject("java", "org.apache.commons.io.FilenameUtils");
     variables.fileSystems = createObject("java", "java.nio.file.FileSystems").getDefault();
     variables.paths = createObject("java", "java.nio.file.Paths");
     // variables.cwdPath = variables.paths.get(variables.cwd, []);
-
-
-;
-
 
 
     function init(any ruleConfiguration) {
@@ -42,7 +39,7 @@ component accessors="true" {
      */
     public array function lintFile(required string filePath) {
 
-       
+      
         if (!fileExists(arguments.filePath)) {
             // Try to expand it
             if(!fileExists(expandPath(arguments.filePath))) {
@@ -97,9 +94,6 @@ component accessors="true" {
      * @return Array of LintResult objects
      */
     public struct function lintFolder(required string folderPath) {
-
-
-       
         var results = [];
         var errors = [];
         var filesScanned = []
@@ -160,8 +154,6 @@ component accessors="true" {
      * @return Array of LintResult objects  
      */
     array function lintAST(required struct ast, string fileName = "") {
-
-     
         var results = [];
         
         // Create AST helper
@@ -206,6 +198,11 @@ component accessors="true" {
                 // skip this rule as it does not apply to this node type
                 continue;
             }
+            
+            if(not StructKeyExists(variables.ruleAccessCount, rule)){
+                variables.ruleAccessCount[rule] = 0;
+            }
+            variables.ruleAccessCount[rule]++;
 
             var ruleResults = arguments.allrules[rule].check(
                 node: arguments.node,

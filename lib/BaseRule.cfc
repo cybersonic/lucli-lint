@@ -15,7 +15,8 @@ abstract component accessors=true {
     property name="group" type="string" default="General"; // BugProne, Security, CodeStyle, etc.
     property name="enabled" type="boolean" default="true";
     property name="parameters" type="struct";
-    property name="nodetype" type="String" default="";
+    property name="nodetype" type="String" default=""; // Single node type this rule applies to
+    property name="nodetypes" type="String" default=""; // Comma separated list of node types this rule applies to
 
 
     static {

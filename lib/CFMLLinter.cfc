@@ -42,7 +42,7 @@ component accessors="true" {
      */
     public array function lintFile(required string filePath) {
 
-      
+       
         if (!fileExists(arguments.filePath)) {
             // Try to expand it
             if(!fileExists(expandPath(arguments.filePath))) {
@@ -97,6 +97,9 @@ component accessors="true" {
      * @return Array of LintResult objects
      */
     public struct function lintFolder(required string folderPath) {
+
+
+       
         var results = [];
         var errors = [];
         var filesScanned = []
@@ -157,6 +160,8 @@ component accessors="true" {
      * @return Array of LintResult objects  
      */
     array function lintAST(required struct ast, string fileName = "") {
+
+     
         var results = [];
         
         // Create AST helper
@@ -191,7 +196,17 @@ component accessors="true" {
         var results = []
         for(var rule in arguments.allrules){
             var ruleItem = "Rule: #rule#"; 
-            variables.timer._start(ruleItem);
+            var nodeTypes = [];
+            if( len(arguments.allrules[rule].getNodeTypes()) ){
+                nodeTypes = listToArray(arguments.allrules[rule].getNodeTypes());
+            } else if( len(arguments.allrules[rule].getNodeType()) ){
+                nodeTypes = [ arguments.allrules[rule].getNodeType() ];
+            }
+            if(Len(nodeTypes) AND not arrayContains(nodeTypes, node.type ?: "")){
+                // skip this rule as it does not apply to this node type
+                continue;
+            }
+
             var ruleResults = arguments.allrules[rule].check(
                 node: arguments.node,
                 helper: variables.astHelper,

@@ -46,6 +46,7 @@ component accessors="true" {
         setRuleCode(arguments.rule.getRuleCode());
         setRuleName(arguments.rule.getRuleName());
         setRuleDescription(arguments.rule.getDescription());
+        setSeverity(arguments.rule.getSeverity());
         setMessage(len(arguments.message) ? arguments.message : arguments.rule.getMessage());
         setFileName(arguments.fileName);
         setLine(arguments.node.start.line);

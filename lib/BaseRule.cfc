@@ -95,14 +95,16 @@ abstract component accessors=true {
         required any lintRule,
         required any node,
         required string fileName = "",
-        required string fileContent = ""
+        required string fileContent = "",
+        string message = ""
     ){
 
         var lintResult = new LintResult(
             rule : arguments.lintRule,
             node : arguments.node,
             fileName : arguments.fileName,
-            fileContent : arguments.fileContent
+            fileContent : arguments.fileContent,
+            message : arguments.message
         );
 
         return lintResult;

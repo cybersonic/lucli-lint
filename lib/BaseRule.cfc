@@ -70,12 +70,17 @@ abstract component accessors=true {
      * Set Paramters, takes in a list of parameters and overrides the existing paramter
      */
     function setParameters(required struct params) {
-        for (var param in arguments.params){
-            if(param EQ "enabled"){
-                variables.enabled = arguments.params[param];
-            }
-            setParameter(param, arguments.params[param]);
+
+        if(arguments.params.keyExists("enabled")){
+            variables.enabled = arguments.params.enabled;
         }
+        // Loop over parameters and set them
+        if(arguments.params.keyExists("parameters")){
+            for(var paramName in arguments.params.parameters){
+                setParameter( paramName, arguments.params.parameters[paramName] );
+            }
+        }
+
         return this;
     }
 

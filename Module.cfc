@@ -1,4 +1,5 @@
-component{
+component accessors="true"{
+    property name="RuleConfig";
     /**
      * CFML Parser and Linter Module
      * 
@@ -89,7 +90,8 @@ component{
         // cfmllint.rc
         // if we find a CFLint we might be able to use that too 
         var configPath = Len(arguments.config) ? arguments.config : variables.cwd & "/.lucli-lint.json";
-        
+
+       
         
         variables.timer.start("Load Rule Configuration");
         var RuleConfig = nullValue();
@@ -98,6 +100,9 @@ component{
         } else {
             RuleConfig = createObject("component", "lib.RuleConfiguration").init();
         }
+
+       
+        variables.RuleConfig = RuleConfig;
         // Add the timer for debugging
         RuleConfig.setTimer( variables.Timer );
         variables.timer.stop("Load Rule Configuration");

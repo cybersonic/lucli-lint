@@ -1,0 +1,21 @@
+{
+    "global": {
+        "outputFormat": "text",
+        "showRuleNames": true,
+        "exitOnError": false,
+        "maxIssues": 0
+    },
+    "ignoreFiles": [
+        
+    ],
+    "rules": {
+        "UNIT_TEST_CHECK": {
+            "enabled": true,
+            "parameters": {
+                "unit_test_regex": "(com/distrokid/.*/)(.*)(?:cfc|cfm)$",
+                "source_folder": "components/",
+                "test_folder": "tests/specs/"
+            }
+        }
+    }
+}

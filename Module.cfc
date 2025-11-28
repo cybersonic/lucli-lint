@@ -61,7 +61,8 @@ component accessors="true"{
         string format = "text",
         string rules = "",
         string config = "",
-        boolean compact = true
+        boolean compact = true,
+        string reportPath = ""
         ) {
 
         if(variables.verboseEnabled){
@@ -158,7 +159,7 @@ component accessors="true"{
             
         // Output results
         var outputFormat = arguments.format;
-        if(outputFormat == "text"){
+        if(outputFormat == "text" && !Len(reportPath)){
             if(!isEmpty(arguments.file)){
                 out("Linting file: " & arguments.file);
             } else if(!isEmpty(arguments.folder)){
@@ -182,7 +183,21 @@ component accessors="true"{
         
         var formattedResults = linter.formatResults(results, outputFormat, compact);
         
-        out(formattedResults);
+        if(Len(arguments.reportPath)){
+
+            // If we are not absolute, make it relative to cwd
+            var reportFilePath = fileObj.init(arguments.reportPath);
+            if(!reportFilePath.isAbsolute()) {
+                arguments.reportPath = fileObj.init(variables.cwd, arguments.reportPath).getCanonicalPath();
+            } else {
+                arguments.reportPath = reportFilePath.getAbsolutePath();
+            }
+            // Save to file
+            fileWrite(arguments.reportPath, formattedResults);
+            out("Report written to: " & arguments.reportPath);
+        } else {
+            out(formattedResults);
+        }
         
         return results;
             

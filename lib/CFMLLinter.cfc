@@ -578,7 +578,7 @@ component accessors="true" {
             "details": "Static analysis results for CFML code",
             "type": "COVERAGE",
             "report_type": "COVERAGE",
-            "result": "FAILED",
+            "result": "FAILED", // Default to FAILED, will set to PASSED if no errors
             "reporter": "LuCLI Linter",
             "reporter_link": "https://github.com/cybersonic/lucli-lint",
             "data": [],

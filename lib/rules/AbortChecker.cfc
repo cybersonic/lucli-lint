@@ -17,7 +17,7 @@ component extends="../BaseRule" {
         variables.group = "BadPractice";
         variables.nodeType = "CFMLTag";
 
-         variables.parameters = {
+        variables.parameters = {
             "extensions": "cfm,cfml,cfc",
             "tagOnly": false
         };

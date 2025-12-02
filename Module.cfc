@@ -53,6 +53,8 @@ component accessors="true"{
      * @rules comma-separated list of rules to apply, if left empty, it will look for rules in config file or use all enabled rules
      * @config path to config file, if not provided, it will look for cflinter.json in the current directory of the file or folder
      * @compact boolean whether to compact the JSON output (default: true)
+     * @reportPath path to save the report file (optional)
+     * @configStruct struct with configuration options (optional)
      * @return struct with linting results
      */
     function main(
@@ -62,7 +64,8 @@ component accessors="true"{
         string rules = "",
         string config = "",
         boolean compact = true,
-        string reportPath = ""
+        string reportPath = "",
+        struct configStruct = {}
         ) {
 
         if(variables.verboseEnabled){
@@ -96,12 +99,8 @@ component accessors="true"{
         
         variables.timer.start("Load Rule Configuration");
         var RuleConfig = nullValue();
-        if (fileExists(configPath)) {
-            RuleConfig = createObject("component", "lib.RuleConfiguration").init(configPath);
-        } else {
-            RuleConfig = createObject("component", "lib.RuleConfiguration").init();
-        }
-
+        RuleConfig = createObject("component", "lib.RuleConfiguration").init(configPath=configPath, configStruct=configStruct);
+    
        
         variables.RuleConfig = RuleConfig;
         // Add the timer for debugging

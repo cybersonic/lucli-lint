@@ -14,7 +14,7 @@ component accessors="true" {
 
 
 
-    function init(string configFile = "") {
+    function init(string configFile = "", struct configStruct = {}) {
         variables.ruleSettings = {};
         variables.globalSettings = {
             outputFormat: "text",
@@ -27,6 +27,18 @@ component accessors="true" {
 
         if (len(arguments.configFile) && fileExists(arguments.configFile)) {
             loadConfigurationFromFile(arguments.configFile);
+        }
+        if(!isEmpty(arguments.configStruct)){
+            // Merge provided config struct
+            if (structKeyExists(arguments.configStruct, "global")) {
+                structAppend(variables.globalSettings, arguments.configStruct.global, true);
+            }
+            if (structKeyExists(arguments.configStruct, "rules")) {
+                structAppend(variables.ruleSettings, arguments.configStruct.rules, true);
+            }
+            if (structKeyExists(arguments.configStruct, "ignoreFiles")) {
+                variables.ignoreFiles = arguments.configStruct.ignoreFiles;
+            }
         }
          // Load and configure all rules
         var rules = directoryList("#getDirectoryFromPath(getCurrentTemplatePath())#/rules/", false, "name", "*.cfc");
@@ -42,10 +54,12 @@ component accessors="true" {
             }
             variables.rules[ruleCode] = rule; 
             // Group them by type
-            if(not structKeyExists(variables.rulesByNodeType, rule.getNodeType())){
-                variables.rulesByNodeType[rule.getNodeType()] = [];
+            if(!isEmpty(rule.getNodeType()) ) {
+                if(not structKeyExists(variables.rulesByNodeType, rule.getNodeType())){
+                    variables.rulesByNodeType[rule.getNodeType()] = [];
+                }
+                variables.rulesByNodeType[rule.getNodeType()].append(rule);
             }
-            variables.rulesByNodeType[rule.getNodeType()].append(rule);
         }
         // dump(var=variables, label="Updated rule settings" , abort=true);
         return this;

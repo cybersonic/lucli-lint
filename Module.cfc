@@ -65,7 +65,8 @@ component accessors="true"{
         string config = "",
         boolean compact = true,
         string reportPath = "",
-        struct configStruct = {}
+        struct configStruct = {},
+        boolean silent=false
         ) {
 
         if(variables.verboseEnabled){
@@ -183,7 +184,6 @@ component accessors="true"{
         var formattedResults = linter.formatResults(results, outputFormat, compact);
         
         if(Len(arguments.reportPath)){
-
             // If we are not absolute, make it relative to cwd
             var reportFilePath = fileObj.init(arguments.reportPath);
             if(!reportFilePath.isAbsolute()) {
@@ -194,21 +194,11 @@ component accessors="true"{
             // Save to file
             fileWrite(arguments.reportPath, formattedResults);
             out("Report written to: " & arguments.reportPath);
-        } else {
+        } else if(!silent){
             out(formattedResults);
         }
         
-        return results;
-            
-        // } catch (any e) {
-        //     dump(e);
-        //     out("Error: " & e.message);
-        //     // dump(e);
-        //     if (structKeyExists(e, "detail") && len(e.detail)) {
-        //         out("Details: " & e.detail);
-        //     }
-        //     return "Linting failed";
-        // }
+        return formattedResults;
     }
 
     function out(any message){
@@ -225,6 +215,7 @@ component accessors="true"{
         try {
             // out("Available CFML Linter Rules:");
             outline("Available CFML Linter Rules:");
+            // This should come from the RulesConfiguration
             
             // Create rules directly
             var rules = [

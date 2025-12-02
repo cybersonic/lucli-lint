@@ -17,7 +17,8 @@ component accessors="true" {
     property name="endcolumn" type="numeric";
     property name="endOffset" type="numeric";
     property name="code" type="string";
-    property name="variable" type="string";
+    property name="variable" type="string"; //the variable we found.
+    property name="value" type="string"; //random value you can add
     property name="stackTrace" type="string" default="";
     
     
@@ -104,7 +105,11 @@ component accessors="true" {
             "endcolumn": variables.endcolumn,
             "endOffset": variables.endOffset,
             "code": variables.code,
-            "stackTrace": variables.stackTrace
+            "stackTrace": variables.stackTrace,
+            "variable": variables.variable,
+            "value": variables.value,
+            "node": variables.node
+
         };
     }
     

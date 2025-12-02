@@ -6,7 +6,7 @@
  * @author  Mark Drew
  * @date 27th Oct 2025
  */
-component extends="../../BaseRule" {
+component extends="../BaseRule" {
     
     function init() {
         variables.ruleCode = "AVOID_USING_ABORT";
@@ -35,13 +35,15 @@ component extends="../../BaseRule" {
 
 
         if(isAbort){
-            var lintResult = createObject("component", "../../LintResult").init(
-                rule = this,
-                node = node,
-                fileName = fileName,
-                fileContent = fileContent
+            results.append(
+                createLintResult(
+                        lintRule = this,
+                        node = node,
+                        fileName = arguments.fileName,
+                        fileContent = arguments.fileContent
+                    )
             );
-           return lintResult;
+           
         }
 
         return results;

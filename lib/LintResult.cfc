@@ -106,8 +106,8 @@ component accessors="true" {
             "endOffset": variables.endOffset,
             "code": variables.code,
             "stackTrace": variables.stackTrace,
-            "variable": variables.variable,
-            "value": variables.value,
+            // "variable": variables.variable,
+            // "value": variables.value,
             "node": variables.node
 
         };

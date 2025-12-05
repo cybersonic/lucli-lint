@@ -578,7 +578,7 @@ component accessors="true" {
             "details": "Static analysis results for CFML code",
             "type": "COVERAGE",
             "report_type": "COVERAGE",
-            "result": "FAILED", // Default to FAILED, will set to PASSED if no errors
+            "result": "PASSED", // Default to FAILED, will set to PASSED if no errors
             "reporter": "LuCLI Linter",
             "reporter_link": "https://github.com/cybersonic/lucli-lint",
             "data": [],
@@ -619,7 +619,7 @@ component accessors="true" {
         
         // Set result based on error count
         if (summary.errors > 0 OR summary.failure > 0) {
-            bitbucketReport.result = "FAIL";
+            bitbucketReport.result = "FAILED";
         }
         
         var count = 0;

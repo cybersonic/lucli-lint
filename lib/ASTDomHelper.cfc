@@ -137,8 +137,6 @@ component {
             results.append(root);
         }
 
-
-
         if(isArray(root.body?:nullValue())){
             for(var item in root.body){
                 results.append( getNodesByType(item, type), true);
@@ -148,6 +146,15 @@ component {
             results.append( getNodesByType(root.body, type) , true);
         }
 
+        if(
+                isStruct(root.consequent?:nullValue())
+                AND isArray(root.consequent.body?:nullValue())
+            ){
+           
+           for(var item in root.consequent.body){
+                results.append( getNodesByType(item, type), true);
+            }
+        }
         
 
        
@@ -163,8 +170,8 @@ component {
             for(var item in root.arguments){
                 results.append( getNodesByType(item, type), true);
             }
-            
         }
+
 
         if(isStruct(root.expression?:nullValue()) && root.expression.type == "type"){
             results.append( root.expression );

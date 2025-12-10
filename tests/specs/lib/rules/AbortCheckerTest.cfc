@@ -14,7 +14,7 @@ component extends="testbox.system.BaseSpec"{
                 );
 
 
-            it( "A Spec", () => {
+            it( "should find abort Tags", () => {
 
                 
                 
@@ -26,15 +26,19 @@ component extends="testbox.system.BaseSpec"{
                             "parameters" : {
                                 "tagOnly" : true
                             }
+                        },
+                        "SQL_CHECK": {
+                            "enabled" : false
                         }
                     }
                 };
-                var ret = module.main(file="../specs/artefacts/AbortExample.cfm", format="silent", configStruct=config);
+                var ret = module.main(file="../../../specs/artefacts/AbortExample.cfm", format="raw", silent="true" ,configStruct=config);
                 debug(ret);
                 expect(ret.len()).toBe( 1 );
                 expect(ret[1].getRuleCode()).toBe( "AVOID_USING_ABORT" );
                 expect(ret[1].getLine()).toBe( 4 );
-
+            } );
+            it( "should find all abort statements", () => {
                 config = {
                     "rules" : {
                         "AVOID_USING_ABORT" : {
@@ -46,7 +50,7 @@ component extends="testbox.system.BaseSpec"{
                         }
                     }
                 };
-                var ret = module.main(file="../specs/artefacts/AbortExample.cfm", format="silent", configStruct=config);
+                var ret = module.main(file="../../../specs/artefacts/AbortExample.cfm", format="raw",  silent="true", configStruct=config);
                 debug(ret);
                 expect(ret.len()).toBe( 2 );
                 expect(ret[1].getRuleCode()).toBe( "AVOID_USING_ABORT" );

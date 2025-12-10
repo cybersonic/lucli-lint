@@ -9,25 +9,39 @@ component accessors="true" {
     property name="globalSettings" type="struct" default="#{}#";
     property name="rules" type="struct" default="#{}#";
     property name="ignoreFiles" type="array" default="#[]#";
+    property name="includes" type="array" default="#[]#"; //Paths to include
+    property name="excludes" type="array" default="#[]#"; //Paths to exclude
     property name="rulesByNodeType" type="struct" default="#{}#";
     property name="timer" type="any" default="#{}#";
+    property name="logFile" type="string" default="";
+    property name="loggingEnabled" type="boolean" default="false";
+    
+    property name="configHash" type="string" default="";
 
-
-
-    function init(string configFile = "", struct configStruct = {}) {
+    function init(string configPath = "", struct configStruct = {}) {
         variables.ruleSettings = {};
         variables.globalSettings = {
             outputFormat: "text",
             showRuleNames: true,
             ignoreParseErrors:false,
             exitOnError: false,
-
+            loggingEnabled: false,
+            logFile: "",
+            logTimeUnits: "milli",
             maxIssues: 0 // 0 = unlimited
         }; 
+    
 
-        if (len(arguments.configFile) && fileExists(arguments.configFile)) {
-            loadConfigurationFromFile(arguments.configFile);
+
+        if (len(arguments.configPath) && fileExists(arguments.configPath)) {
+            variables.globalSettings.configPath = arguments.configPath;
+            var fileContent = fileRead(arguments.configPath);
+            var config = deserializeJSON(fileContent);
+            // arguments.configStruct = structMerge(config, arguments.configStruct);
+            arguments.configStruct = config;
+            // loadConfigurationFromFile(arguments.configFile);
         }
+        //This should be the same as load Configuration from file but from a struct
         if(!isEmpty(arguments.configStruct)){
             // Merge provided config struct
             if (structKeyExists(arguments.configStruct, "global")) {
@@ -39,7 +53,19 @@ component accessors="true" {
             if (structKeyExists(arguments.configStruct, "ignoreFiles")) {
                 variables.ignoreFiles = arguments.configStruct.ignoreFiles;
             }
+            if (structKeyExists(arguments.configStruct, "includes")) {
+              
+                variables.includes = arguments.configStruct.includes;
+            }
+            if (structKeyExists(arguments.configStruct, "excludes")) {
+                variables.excludes = arguments.configStruct.excludes;
+            }
         }
+        var stringConfig = serializeJSON({
+            ruleSettings = variables.ruleSettings,
+            globalSettings = variables.globalSettings
+        });
+        setConfigHash( hash(stringConfig, "quick") );
          // Load and configure all rules
         var rules = directoryList("#getDirectoryFromPath(getCurrentTemplatePath())#/rules/", false, "name", "*.cfc");
         for(var ruleClass in rules) {
@@ -61,7 +87,6 @@ component accessors="true" {
                 variables.rulesByNodeType[rule.getNodeType()].append(rule);
             }
         }
-        // dump(var=variables, label="Updated rule settings" , abort=true);
         return this;
     }
     
@@ -87,6 +112,13 @@ component accessors="true" {
             // Load ignore files glob patterns
             if (structKeyExists(config, "ignoreFiles")) {
                 variables.ignoreFiles = config.ignoreFiles;
+            }
+
+            if (structKeyExists(arguments.configStruct, "includes")) {
+                variables.includes = arguments.configStruct.includes;
+            }
+            if (structKeyExists(arguments.configStruct, "excludes")) {
+                variables.excludes = arguments.configStruct.excludes;
             }
             
         } catch (any e) {
@@ -357,6 +389,10 @@ component accessors="true" {
         };
         
         return serializeJSON(sampleConfig);
+    }
+
+    function hasLogFile(){
+        return !isEmpty(getLogFile());
     }
     
     /**

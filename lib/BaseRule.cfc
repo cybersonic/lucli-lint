@@ -100,7 +100,9 @@ abstract component accessors=true {
         required any lintRule,
         required any node,
         required string fileName = "",
-        required string fileContent = ""
+        required string fileContent = "",
+        string ruleCode = "",
+        string message = ""
     ){
 
         var lintResult = new LintResult(
@@ -109,6 +111,14 @@ abstract component accessors=true {
             fileName : arguments.fileName,
             fileContent : arguments.fileContent
         );
+
+        if(!isEmpty(arguments.ruleCode)){
+            lintResult.setRuleCode(arguments.ruleCode);
+        }
+
+        if(!isEmpty(arguments.message)){
+            lintResult.setMessage(arguments.message);
+        }
 
         return lintResult;
     }

@@ -39,7 +39,6 @@ component accessors="true" {
      */
     public array function lintFile(required string filePath) {
 
-      
         if (!fileExists(arguments.filePath)) {
             // Try to expand it
             if(!fileExists(expandPath(arguments.filePath))) {
@@ -61,11 +60,11 @@ component accessors="true" {
             }
             var ErrorLintResult = createObject("component", "LintResult").init(
                     rule: {
-                        getRuleCode: function(){ return "AST_PARSE_ERROR"; },
-                        getRuleName: function(){ return "AST Parser"; },
-                        getDescription: function(){ return "Error parsing AST"; },
+                        getRuleCode: function(){ return "ERROR"; },
+                        getRuleName: function(){ return "General Error"; },
+                        getDescription: function(){ return e.message; },
                         getSeverity: function(){ return "FAILURE"; },
-                        getMessage: function(){ return "Error parsing AST: " & e.message; }
+                        getMessage: function(){ return  e.message; }
                     },
                     node: {
                         start: { line: 0, column: 0, offset: 0 },
@@ -101,20 +100,41 @@ component accessors="true" {
             throw(type="DirectoryNotFound", message="Directory not found: " & arguments.folderPath);
         }
         // Recursively get all .cfm and .cfc files in the folder
-        var files = directoryList(
-                                path:arguments.folderPath,
-                                recurse: true,
-                                listInfo: "array",
-                                filter=pathFilter,
-                                type="file",
-                                sort: "asc"
-                                );
-        for (var row in files) {
-            var fileResults = lintFile(row);
-            // dump(var=fileResults, label="File results for #row#");
-            results.append(fileResults, true);
+
+        // if we have an includes array, use that to build the search paths      
+        var includePaths = variables.ruleConfiguration.getIncludes();
+
+        var searchPaths = includePaths.map(
+            function(includePath){
+                return variables.paths.get(variables.cwd, [includePath]).toString();
+            }
+        );
+      
+        // If no includes, just use the folderPath
+        if(isEmpty(searchPaths)){
+            searchPaths = [arguments.folderPath];
         }
 
+        var files = [];
+        var skippedFiles = [];
+        for(var searchPath in searchPaths){
+            var searchFiles = directoryList(
+                                    path:searchPath,
+                                    recurse: true,
+                                    listInfo: "array",
+                                    filter=pathFilter,
+                                    type="file",
+                                    sort: "asc"
+                                    );
+            files.append(searchFiles, true);
+        }
+        // We should also filter the files based on excludes, rather than in pathFilter, so that we can report on files skipped?
+    
+        for (var row in files) {
+            var fileResults = lintFile(row);    
+            results.append(fileResults, true);
+        }
+        
         // dump(var=results, label="Final results");
         return {
             results: results,
@@ -142,9 +162,7 @@ component accessors="true" {
             if(pathMatcher.matches(thePath)){
                 return false;
             }
-        
         }
-        
         return true;
     }
     /**
@@ -162,6 +180,17 @@ component accessors="true" {
         var rules = variables.ruleConfiguration.getEnabledRules();
         var fileContent = FileRead(fileName);
 
+        var logTimeUnits = variables.ruleConfiguration.getGlobalSetting("logTimeUnits", "ms");
+
+        var start = getTickCount(logTimeUnits);
+
+        logEvent(
+            file: fileName,
+            event: "Start Linting",
+            duration: "0",
+            unit: logTimeUnits
+            );
+
         var recursiveResults = recursiveNodeParser(
                 node: arguments.ast,
                 document: arguments.ast,
@@ -170,11 +199,26 @@ component accessors="true" {
                 helper: variables.astHelper,
                 allrules: rules
                 );
+        
+        var end = getTickCount(logTimeUnits) - start;
+
+        logEvent(
+            file: fileName,
+            event: "End Linting",
+            duration: end,
+            unit: logTimeUnits
+            );
+        
 
         return recursiveResults;
     }
     
 
+    function logEvent(String file, String event, String duration, String unit){
+        if(variables.ruleConfiguration.hasLogFile()){  
+            fileAppend( variables.ruleConfiguration.getLogFile(), "#getTickCount()#,#file#, #event#, #duration# #unit# #Chr(10)#");
+        }
+    }
 
     array function recursiveNodeParser(
             required struct node, 
@@ -186,15 +230,22 @@ component accessors="true" {
             )
     {
         var results = []
+        node.type = node.type ?: "";
         for(var rule in arguments.allrules){
             var ruleItem = "Rule: #rule#"; 
+            var ruleObj = arguments.allrules[rule];
             var nodeTypes = [];
-            if( len(arguments.allrules[rule].getNodeTypes()) ){
-                nodeTypes = listToArray(arguments.allrules[rule].getNodeTypes());
-            } else if( len(arguments.allrules[rule].getNodeType()) ){
-                nodeTypes = [ arguments.allrules[rule].getNodeType() ];
+
+            
+            if( len(ruleObj.getNodeType()) ){
+                nodeTypes = listToArray(ruleObj.getNodeType());
             }
-            if(Len(nodeTypes) AND not arrayContains(nodeTypes, node.type ?: "")){
+            // If we have the nodeTypeS (plural) we check against that
+            if( len(ruleObj.getNodeTypes()) ){
+                nodeTypes = listToArray(ruleObj.getNodeTypes());
+            }
+        
+            if(Len(nodeTypes) AND not arrayContainsNoCase(nodeTypes, node.type)){
                 // skip this rule as it does not apply to this node type
                 continue;
             }
@@ -204,12 +255,25 @@ component accessors="true" {
             }
             variables.ruleAccessCount[rule]++;
 
+            var logTimeUnits = variables.ruleConfiguration.getGlobalSetting("logTimeUnits", "milli");
+            var start = getTickCount(logTimeUnits);
             var ruleResults = arguments.allrules[rule].check(
                 node: arguments.node,
                 helper: variables.astHelper,
                 filename: arguments.fileName,
                 fileContent: fileContent
                 );
+            var end = getTickCount(logTimeUnits) - start;
+            
+            logEvent(
+                file: fileName,
+                event: rule,
+                duration: end,
+                unit: logTimeUnits
+                );
+
+
+
             variables.timer._stop(ruleItem);
             results.append(ruleResults, true);
         }
@@ -409,16 +473,15 @@ component accessors="true" {
             case "json":
                 return formatResultsAsJSON(arguments.results, arguments.compact );
             case "xml":
-                return formatResultsAsXML(arguments.results);
+                return formatResultsAsXML(arguments.results); 
             case "bitbucket":
-                // Placeholder for Bitbucket format
                 return formatResultsAsBitbucket(arguments.results);
-            case "silent":
-                return ""; // No output
-
+            case "raw":
+                return arguments.results;
             case "tsc":
-                // Placeholder for TSC format
                 return formatResultsAsTSC(arguments.results);
+            case "report":
+                return formatResultsAsReport(arguments.results);
             default:
                 return formatResultsAsText(arguments.results);
         }
@@ -523,6 +586,33 @@ component accessors="true" {
         return arrayToList(output, chr(10));
     }
 
+
+    function formatResultsAsReport(required array results) {
+        var output = [];
+        var summary = generateSummary(arguments.results);
+        
+        arrayAppend(output, "CFML Linter Report");
+        arrayAppend(output, "=================");
+        arrayAppend(output, "Total issues: " & summary.total);
+        arrayAppend(output, "Errors:  #summary.errors# , Warnings:  #summary.warnings# , Info:  #summary.info#, Failures:  #summary.failure#");
+        arrayAppend(output, "");
+        
+        // for (var result in arguments.results) {
+        //     var line = result.getSeverity() & " - " & result.getFileName() & ":#result.getLine()#:#result.getColumn()#";
+        //     if (result.getLine() > 0) {
+        //         line &= " (line " & result.getLine();
+        //         if (result.getColumn() > 0) {
+        //             line &= ", col " & result.getColumn();
+        //         }
+        //         line &= ")";
+        //     }
+        //     line &= ": [" & result.getRuleCode() & "] " & result.getFormattedMessage();
+        //     // line &= result.getCode();
+        //     arrayAppend(output, line);
+        // }
+        
+        return arrayToList(output, chr(10));
+    }
     /**
      * Format results as Bitbucket Report
      *  The bitbucekt report should look like this (see https://developer.atlassian.com/cloud/bitbucket/rest/api-group-reports/#api-repositories-workspace-repo-slug-commit-commit-reports-reportid-put):

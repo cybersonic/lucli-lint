@@ -18,8 +18,8 @@ component extends="testbox.system.BaseSpec"{
 
             it("sample should be valid", function(){
                 var sample = new tests.specs.artefacts.ComplexitySample();
-                debug(sample);
-                debug(sample.switchLike("new"));
+                
+                expect( sample.switchLike("new") ).toBe( "New" );
             });
             it( "should find basic functions and measure complexity", () => {
                 var config = {
@@ -30,17 +30,19 @@ component extends="testbox.system.BaseSpec"{
                             "parameters" : {
                                 "maximum" : 1
                             }
+                        },
+                        "COMPONENT_INVALID_NAME" : {
+                            "enabled" : false
                         }
                     }
                 };
-                var retJSON = module.main(file="../specs/artefacts/ComplexitySample.cfc", format="json", configStruct=config, silent=true);
-                expect(isJSON(retJSON)).toBeTrue();
-                var ret = deserializeJSON(retJSON);
+                var ret = module.main(file="../../../specs/artefacts/ComplexitySample.cfc", format="raw", configStruct=config, silent=true);
+               
 
                 debug(ret);
-                expect(ret).toHaveKey("results");
-                expect(ret.results.len()).toBe( 6 );
-                expect(ret.results[1].ruleCode).toBe( "FUNCTION_TOO_COMPLEX" );
+               
+                expect(ret.len()).toBe( 6 );
+                expect(ret[1].getRuleCode()).toBe( "FUNCTION_TOO_COMPLEX" );
 
             } );
 
@@ -53,17 +55,19 @@ component extends="testbox.system.BaseSpec"{
                             "parameters" : {
                                 "maximum" : 10
                             }
+                        },
+                         "COMPONENT_INVALID_NAME" : {
+                            "enabled" : false
                         }
                     }
                 };
-                var retJSON = module.main(file="../specs/artefacts/ComplexitySample.cfc", format="json", configStruct=config, silent=true);
-                expect(isJSON(retJSON)).toBeTrue();
-                var ret = deserializeJSON(retJSON);
+                var ret = module.main(file="../../../specs/artefacts/ComplexitySample.cfc", format="raw", configStruct=config, silent=true);
+    
 
-                debug(ret);
-                expect(ret).toHaveKey("results");
-                expect(ret.results.len()).toBe( 1 );
-                expect(ret.results[1].ruleCode).toBe( "FUNCTION_TOO_COMPLEX" );
+                    debug(ret);
+                
+                expect(ret.len()).toBe( 1 );
+                expect(ret[1].getRuleCode()).toBe( "FUNCTION_TOO_COMPLEX" );
             })
         } );
     }

@@ -19,15 +19,21 @@ component extends="testbox.system.BaseSpec"{
                     "rules" : {
                         "AVOID_USING_DUMP" : {
                             "enabled" : true
+                        },
+                        "SQL_CHECK": {
+                            "enabled" : false
                         }
                     }
                 };
-                var ret = module.main(file="../specs/artefacts/DumpExample.cfm", format="silent", configStruct=config);
+                var ret = module.main(file="../../../specs/artefacts/DumpExample.cfm", format="raw", configStruct=config, silent=true);
                 debug(ret);
-                expect(ret.len()).toBe( 2 );
+                expect(ret.len()).toBe( 3 );
                 expect(ret[1].getRuleCode()).toBe( "AVOID_USING_DUMP" );
-                expect(ret[1].getLine()).toBe( 2 );
-                expect(ret[2].getLine()).toBe( 4 );
+                expect(ret[1].getCode()).toBe( 'dump("elvis")' );
+                expect(ret[2].getRuleCode()).toBe( "AVOID_USING_DUMP" );
+                expect(ret[2].getCode()).toBe( 'writeDump(var="elvis")' );
+                expect(ret[3].getRuleCode()).toBe( "AVOID_USING_DUMP" );
+                expect(ret[3].getCode()).toInclude( 'cfdump' );
 
             } );
         } );

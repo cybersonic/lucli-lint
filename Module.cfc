@@ -1,4 +1,4 @@
-component accessors="true"{
+component accessors="true" extends="modules.BaseModule" {
     property name="RuleConfig";
     /**
      * CFML Parser and Linter Module
@@ -66,11 +66,12 @@ component accessors="true"{
         boolean compact = true,
         string reportPath = "",
         struct configStruct = {},
-        boolean silent=false
+        boolean silent=false,
+        string logfile = ""
         ) {
 
         if(variables.verboseEnabled){
-            out("CFML Linter Module initialized.");
+            out("Lucee Linter Module initialized.");
             out("file = " & file);
             out("folder = " & folder);
             out("format = " & format);
@@ -89,13 +90,14 @@ component accessors="true"{
             return showHelp();
         }
 
-          variables.Timer.stop("CFML Linting Process");
+        variables.Timer.stop("CFML Linting Process");
         //Create the rule configuration (with all the rules)
+        // TODO: Look for config files in this order:
+        // .lucli-lint.json;
         // .cflint.json
         // cfmllint.rc
-        // if we find a CFLint we might be able to use that too 
+        
         var configPath = Len(arguments.config) ? arguments.config : variables.cwd & "/.lucli-lint.json";
-
        
         
         variables.timer.start("Load Rule Configuration");
@@ -106,6 +108,7 @@ component accessors="true"{
         variables.RuleConfig = RuleConfig;
         // Add the timer for debugging
         RuleConfig.setTimer( variables.Timer );
+        RuleConfig.setLogFile( logfile );
         variables.timer.stop("Load Rule Configuration");
 
         // If specific rules are provided, enable only those
@@ -127,6 +130,7 @@ component accessors="true"{
 
         // Linting Results
         var results = [];
+        var lintingReport = new lib.LintReport(results);
 
         // Check the file path. 
         if(!isEmpty(arguments.file)) {
@@ -136,6 +140,7 @@ component accessors="true"{
             } else {
                 arguments.file = filePath.getAbsolutePath();
             }
+            lintingReport.setFile(arguments.file);
 
             var fileResults = linter.lintFile(arguments.file);
             // Should return something else, including how manyu files we did.
@@ -151,6 +156,7 @@ component accessors="true"{
             } else {
                 arguments.folder = folderPath.getAbsolutePath();
             }
+            lintingReport.setFolder(arguments.folder);
             var folderResults = linter.lintFolder(arguments.folder);
             // dump(var=folderResults.results, label="Folder results");
             ArrayAppend(results, folderResults.results, true);
@@ -201,12 +207,12 @@ component accessors="true"{
         return formattedResults;
     }
 
-    function out(any message){
-        if(!isSimpleValue(message)){
-            message = serializeJson(var=message, compact=false);
-        }
-        writeOutput(message & chr(10));
-    }
+    // function out(any message){
+    //     if(!isSimpleValue(message)){
+    //         message = serializeJson(var=message, compact=false);
+    //     }
+    //     Su(message & chr(10));
+    // }
     
     /**
      * Show available rules and their descriptions
@@ -253,7 +259,7 @@ component accessors="true"{
 
     function showHelp() {
         
-        out("CFML Linter Module Help:");
+        out("Lucee Linter Module Help:");
         out("=========================");
         out("Usage: lucli lint [options]");
         out("Options:");

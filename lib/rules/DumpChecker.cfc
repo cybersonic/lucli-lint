@@ -29,18 +29,22 @@ component extends="../BaseRule" {
     function check(required struct node, required any helper, string fileName = "", string fileContent="") {
         var results = [];
 
+        // TODO: create a parent "tag/function call checker" that handles this logic
 
+        // TODO: check file extension
         // if(variables.paramters.extensionsListLast(toLowerCase(arguments.fileName),".") NOT IN ListToArray( toLowerCase( variables.parameters.extensions ) )){
         //     return results;
         // }
-     
+       
+       
+        
         var isDump = (
             (node.type == "CFMLTag" && node.name == "dump") 
             OR (node.type == "CallExpression"  
             AND node?.callee?.type == "Identifier" 
-            AND node?.callee?.name == "dump")
+            AND (node?.callee?.name == "dump" OR node?.callee?.name == "writeDump"))
         );
-
+        
        
         if(isDump){
             // Looks like tags have the "fullname" property

@@ -33,15 +33,15 @@ component extends="../BaseRule" {
         var results = [];
         var isAbort = (
                         (node.type == "CFMLTag" && node.name == "abort") 
-                        OR (node.type == "CallExpression"  
-                        AND node?.callee?.type == "Identifier" 
-                        AND node?.callee?.name == "abort")
+                        // OR (node.type == "CallExpression"  
+                        // AND node?.callee?.type == "Identifier" 
+                        // AND node?.callee?.name == "abort")
                     );
 
-
-
+                    
+                    
         if(isAbort){
-
+            
             // Looks like tags have the "fullname" property
             var isTag = node.keyExists("fullname") ? true : false; 
             if( variables.parameters.tagOnly AND !isTag ){
@@ -58,7 +58,6 @@ component extends="../BaseRule" {
             );
            
         }
-
         return results;
     }
 }

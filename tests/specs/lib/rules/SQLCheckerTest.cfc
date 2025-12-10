@@ -24,19 +24,23 @@ component extends="testbox.system.BaseSpec"{
 
     function run( testResults, testBox ){
         // all your suites go here.
-        describe( "My First Suite", () => {
-            var  module = new Module(
+        describe( "SQLChecker", () => {
+                var  module = new Module(
                     verbose : false,
                     timing : true,
                     cwd : getDirectoryFromPath(getCurrentTemplatePath())
                 );
-
-
-            it( "A Spec", () => {
-
-                var ret = module.main(file="../artefacts/VarExamples.cfc", format="silent", rules="MISSING_VAR");
+    
+                debug(module);
+            it( "should find all sql variables in a page", () => {
+                var ret = module.main(file="../../artefacts/queries.cfm", format="raw", rules="SQL_CHECK", silent=true);
                 debug(ret);
-                fail( 'implement' )
+                expect( ret ).toBeArray( );
+                expect( ret.len() ).toBe( 24 );
+
+                var firstIssue = ret[1];
+                expect( firstIssue.getRuleCode() ).toBe( "SQL_CHECK" );
+                expect( firstIssue.getCode() ).toBe( 'qry = new Query("SELECT * FROM ELVIS")' );
             } )
 
         } )

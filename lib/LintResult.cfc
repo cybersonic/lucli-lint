@@ -33,7 +33,7 @@ component accessors="true" {
         required string fileName,
         required string fileContent,
         string message = ""
-
+        string severity = ""
     ) {
 
         // Main parts
@@ -46,7 +46,7 @@ component accessors="true" {
         setRuleCode(arguments.rule.getRuleCode());
         setRuleName(arguments.rule.getRuleName());
         setRuleDescription(arguments.rule.getDescription());
-        setSeverity(arguments.rule.getSeverity());
+        setSeverity(len(arguments.severity) ? arguments.severity : arguments.rule.getSeverity());
         setMessage(len(arguments.message) ? arguments.message : arguments.rule.getMessage());
         setFileName(arguments.fileName);
         setLine(arguments.node.start.line);

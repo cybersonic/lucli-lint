@@ -101,7 +101,8 @@ abstract component accessors=true {
         required any node,
         required string fileName = "",
         required string fileContent = "",
-        string message = ""
+        string message = "",
+        string severity = ""
     ){
 
         var lintResult = new LintResult(
@@ -109,7 +110,8 @@ abstract component accessors=true {
             node : arguments.node,
             fileName : arguments.fileName,
             fileContent : arguments.fileContent,
-            message : arguments.message
+            message : arguments.message,
+            severity: arguments.severity
         );
 
         return lintResult;

@@ -1,7 +1,6 @@
 /**
- * Avoid using SQL Rule
- * 
- * Detects usage of SQL and quueries in a file. Returns all the usages where there are query calls and the locations of any sql variables. 
+ * Checks if components in the source_folder defined in .lucli-lint.json have
+ * a corresponding test in the test_folder
  */
 component extends="../BaseRule" {
     
@@ -32,8 +31,14 @@ component extends="../BaseRule" {
     function check(required struct node, required any helper, string fileName = "", string fileContent="") {
         var results = [];
         var fullPath = expandPath(fileName);
+        if (isNull(variables.parameters.unit_test_regex) || trim(variables.parameters.unit_test_regex) EQ "") {
+            systemOutput("unit_test_regex is empty or not set. Skipping regex check.");
+            return results;
+        }
         var matchResult = reFindNoCase("#variables.parameters.unit_test_regex#", fullPath, 1, true);
-
+        // The unit_test_regex should have a format similar to the .lucli-lint.json file in this repo
+        // "unit_test_regex": "(com/myapp/.*/)(.*)\\.(?:cfc|cfm)$" so that the first capturing group
+        // holds the folder path of the component, and the second group holds the base name of the file.
         if(matchResult.pos[1] NEQ 0 && ArrayLen(matchResult.match) GT 2) {
             // Extract the path and filename components
             var folderPath = matchResult.match[2];
@@ -92,16 +97,13 @@ component extends="../BaseRule" {
             var message = "";
             var severity = "INFO";
 
-            if (sourceExists && testExists) {
-                message = "Found matching source and test files: #sourceRelativePath# <-> #testRelativePath#";
-                severity = "INFO";
-            } else if (sourceExists && !testExists) {
+            if (sourceExists && !testExists) {
                 message = "Source file exists but missing test file. Expected: #testRelativePath#";
                 severity = "WARNING";
             } else if (!sourceExists && testExists) {
                 message = "Test file exists but missing source file. Expected: #sourceRelativePath#";
                 severity = "WARNING";
-            } else {
+            } else if (!sourceExists && !testExists) {
                 message = "Neither source nor test file found at expected locations #sourceRelativePath# <-> #testRelativePath#";
                 severity = "ERROR";
             }

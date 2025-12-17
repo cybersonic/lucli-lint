@@ -31,24 +31,6 @@ component extends="testbox.system.BaseSpec"{
                 cwd : testDir
             );
 
-            it( "should find matching source and test files (INFO)", () => {
-                // Test with a source file that has a corresponding test
-                var ret = module.main(
-                    file = "../artefacts/components/com/myapp/services/SampleService.cfc",
-                    format = "silent",
-                    rules = "UNIT_TEST_CHECK"
-                );
-
-                debug(ret);
-                expect( ret ).toBeArray();
-                expect( ret.len() ).toBe( 1 );
-
-                var issue = ret[1];
-                expect( issue.getRuleCode() ).toBe( "UNIT_TEST_CHECK" );
-                expect( issue.getMessage() ).toInclude( "matching source and test files" );
-                expect( issue.getSeverity() ).toBe( "INFO" );
-            });
-
             it( "should warn when source exists but test is missing (WARNING)", () => {
                 // Test with a source file that does NOT have a corresponding test
                 var ret = module.main(

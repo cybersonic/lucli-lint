@@ -33,22 +33,22 @@ component accessors="true" {
         required any node,
         required string fileName,
         required string fileContent,
-        
-
+        string message = ""
+        string severity = ""
     ) {
-       
+
         // Main parts
         setRule(arguments.rule);
         setNode(arguments.node);
         setFileName(arguments.fileName);
         setFileContent(arguments.fileContent);
-        
+
         // Here is where we do the actual work
         setRuleCode(arguments.rule.getRuleCode());
         setRuleName(arguments.rule.getRuleName());
         setRuleDescription(arguments.rule.getDescription());
-        setSeverity(arguments.rule.getSeverity());
-        setMessage(arguments.rule.getMessage());
+        setSeverity(len(arguments.severity) ? arguments.severity : arguments.rule.getSeverity());
+        setMessage(len(arguments.message) ? arguments.message : arguments.rule.getMessage());
         setFileName(arguments.fileName);
         setLine(arguments.node.start.line);
         setColumn(arguments.node.start.column);
@@ -56,7 +56,7 @@ component accessors="true" {
         setEndLine(arguments.node.end.line);
         setEndColumn(arguments.node.end.column);
         setEndOffset(arguments.node.end.offset);
-        
+
         setCodeContents();
 
         return this;

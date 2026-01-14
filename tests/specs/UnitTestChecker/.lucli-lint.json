@@ -16,8 +16,8 @@
             "enabled": true,
             "parameters": {
                 "unit_test_regex": "(com/myapp/.*/)(.*)\\.(?:cfc|cfm)$",
-                "source_folder": "components/",
-                "test_folder": "unit_tests/testcases/"
+                "source_folder": "artefacts/components/",
+                "test_folder": "artefacts/unit_tests/testcases/"
             }
         }
     }

@@ -103,6 +103,7 @@ abstract component accessors=true {
         required string fileContent = "",
         string ruleCode = "",
         string message = "",
+        string severity = "",
         any variable = nullValue(),
         any code = nullValue()
     ){
@@ -111,7 +112,9 @@ abstract component accessors=true {
             rule : arguments.lintRule,
             node : arguments.node,
             fileName : arguments.fileName,
-            fileContent : arguments.fileContent
+            fileContent : arguments.fileContent,
+            message : arguments.message,
+            severity: arguments.severity
         );
 
         if(!isEmpty(arguments.ruleCode)){

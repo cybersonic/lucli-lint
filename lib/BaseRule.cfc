@@ -102,7 +102,9 @@ abstract component accessors=true {
         required string fileName = "",
         required string fileContent = "",
         string ruleCode = "",
-        string message = ""
+        string message = "",
+        any variable = nullValue(),
+        any code = nullValue()
     ){
 
         var lintResult = new LintResult(
@@ -120,8 +122,34 @@ abstract component accessors=true {
             lintResult.setMessage(arguments.message);
         }
 
+        if(!isNull(arguments.variable)){
+            lintResult.setVariable(arguments.variable);
+        }
+
+        if(!isNull(arguments.code)){
+            lintResult.setCode(arguments.code);
+        }
+
         return lintResult;
     }
+    
+    /**
+     * Utility functions to check case styles
+     */
+    function isPascalCase(required string str) {
+        // Check if the string matches PascalCase pattern
+        return reFind("^[A-Z][a-zA-Z0-9]*$", arguments.str) > 0;
+    }
+
+    function isCamelCase(required string str) {
+        // Check if the string matches camelCase pattern
+        return reFind("^[a-z][a-zA-Z0-9]*$", arguments.str) > 0;
+    }
+
+    function isUpperCase(required string str) {
+        return Compare(arguments.str, ucase(arguments.str) ) == 0;
+    }
+
     
 
     /**

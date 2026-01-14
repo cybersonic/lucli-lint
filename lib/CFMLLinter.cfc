@@ -71,7 +71,8 @@ component accessors="true" {
                         end: { line: 0, column: 0, offset: 0 }
                     },
                     fileName: arguments.filePath,
-                    fileContent: ""
+                    fileContent: "",
+                    severity: "FAILURE"
                 );
             
             var TagContext = e.TagContext ?: [];
@@ -274,7 +275,7 @@ component accessors="true" {
 
 
 
-            variables.timer._stop(ruleItem);
+            // variables.timer.stop(ruleItem);
             results.append(ruleResults, true);
         }
 

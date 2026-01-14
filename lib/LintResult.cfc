@@ -33,7 +33,7 @@ component accessors="true" {
         required any node,
         required string fileName,
         required string fileContent,
-        string message = ""
+        string message = "",
         string severity = ""
     ) {
 

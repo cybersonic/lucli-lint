@@ -1,49 +1,12 @@
+/**
+ * Lucee Parser and Linter Module
+ * 
+ * This is the main entry point for the CFML linting module.
+ * It uses Lucee's built-in AST parser and applies configurable linting rules.
+ */
 component accessors="true" extends="modules.BaseModule" {
     property name="RuleConfig";
-    /**
-     * CFML Parser and Linter Module
-     * 
-     * This is the main entry point for the CFML linting module.
-     * It uses Lucee's built-in AST parser and applies configurable linting rules.
-     */
     
-    function init(
-        verboseEnabled=false,
-        timingEnabled=false,
-        cwd="",
-        timer,
-        
-    ) {
-        variables.verboseEnabled = arguments.verboseEnabled;
-        variables.timingEnabled = arguments.timingEnabled;
-        variables.cwd = arguments.cwd;
-        variables.timer = arguments.timer ?: {
-            _start = function(name){
-                if(variables.timingEnabled){
-                    out("Timer start: " & name);
-                }
-            },
-            _stop = function(name){
-                if(variables.timingEnabled){
-                    out("Timer stop: " & name);
-                }
-            },
-            start = function(name){
-                if(variables.timingEnabled){
-                    out("Timer start: " & name);
-                }
-            },
-            stop = function(name){
-                if(variables.timingEnabled){
-                    out("Timer stop: " & name);
-                }
-            }
-        };
-        
-        return this;
-    }
-
-
     /**
      * main entry point
      *
@@ -270,13 +233,13 @@ component accessors="true" extends="modules.BaseModule" {
         return "Help information displayed";
     }
 
-    function verbose(any message){
+    private function verbose(any message){
         if(variables.verboseEnabled){
             out(message);
         }
     }
 
-    function outline(string message, boolean bShowBorder=false){
+    private void function outline(string message, boolean bShowBorder=false){
         var lineLength = message.len();
         if(bShowBorder){
             lineLength += 4;

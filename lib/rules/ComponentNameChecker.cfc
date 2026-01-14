@@ -58,6 +58,7 @@ component extends="../BaseRule" {
             var issueCode = "";
             var issueMessage = "";
             
+            // TODO: have to also check if the rule is enabled before running checks
             // Check if name is all caps
             if (compare(componentName, ucase(componentName)) == 0 ) {
                  results.append(
@@ -132,7 +133,7 @@ component extends="../BaseRule" {
                 );
             }
             // Check for temporary-looking names
-            if (reFindNoCase("^(temp|tmp|test|foo|bar|baz|deleteme)", componentName)) {
+            if (reFindNoCase("^(temp|tmp|test|foo|bar|baz|deleteme|delete_me)|(temp|tmp|test|foo|bar|baz|deleteme|delete_me)$", componentName)) {
                 results.append(
                     createLintResult(
                         lintRule = this,
@@ -145,6 +146,9 @@ component extends="../BaseRule" {
                     )
                 );
             }
+
+
+            // PACKAGE_CASE_MISMATCH
             // Check for common prefixes/postfixes
             if (reFindNoCase("(Helper|Util|Manager|Handler|Processor|Controller|Service)$", componentName)) {
                 // This is actually acceptable for components, so we'll skip this check

@@ -2,3 +2,5 @@ WEB-INF/
 testbox
 tests/old
 box.json
+cache/
+docs/todo/

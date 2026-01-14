@@ -1,0 +1,137 @@
+component {
+
+    function thisFunctionIsTooLong(){
+        var a = 1;
+        var b = 2;
+        var c = 3;
+        var d = 4;
+        var e = 5;
+        var f = 6;
+        var g = 7;
+        var h = 8;
+        var i = 9;
+        var j = 10;
+        var k = 11;
+        var l = 12;
+        var m = 13;
+        var n = 14;
+        var o = 15;
+        var p = 16;
+        var q = 17;
+        var r = 18;
+        var s = 19;
+        var t = 20;
+        var u = 21;
+        var v = 22;
+        var w = 23;
+        var x = 24;
+        var y = 25;
+        var z = 26;
+        var aa = 27;
+        var ab = 28;
+        var ac = 29;
+        var ad = 30;
+        var ae = 31;
+        var af = 32;
+        var ag = 33;
+        var ah = 34;
+        var ai = 35;
+        var aj = 36;
+        var ak = 37;
+        var al = 38;
+        var am = 39;
+        var an = 40;
+        var ao = 41;
+        var ap = 42;
+        var aq = 43;
+        var ar = 44;
+        var as = 45;
+        var at = 46;
+        var au = 47;
+        var av = 48;
+        var aw = 49;
+        var ax = 50;
+        var ay = 51;
+        var az = 52;
+        var ba = 53;
+        var bb = 54;
+        var bc = 55;
+        var bd = 56;
+        var be = 57;
+        var bf = 58;
+        var bg = 59;
+        var bh = 60;
+        var bi = 61;
+        var bj = 62;
+        var bk = 63;
+        var bl = 64;
+        var bm = 65;
+        var bn = 66;
+        var bo = 67;
+        var bp = 68;
+        var bq = 69;
+        var br = 70;
+        var bs = 71;
+        var bt = 72;
+        var bu = 73;
+        var bv = 74;
+        var bw = 75;
+        var bx = 76;
+        var by = 77;
+        var bz = 78;
+        var ca = 79;
+        var cb = 80;
+        var cc = 81;
+        var cd = 82;
+        var ce = 83;
+        var cf = 84;
+        var cg = 85;
+        var ch = 86;
+        var ci = 87;
+        var cj = 88;
+        var ck = 89;
+        var cl = 90;
+        var cm = 91;
+        var cn = 92;
+        var co = 93;
+        var cp = 94;
+        var cq = 95;
+        var cr = 96;
+        var cs = 97;
+        var ctx = 98;
+        var cu = 99;
+        var cv = 100;
+        var cw = 101;
+        var cx = 102;
+        var cy = 103;
+        var cz = 104;
+        
+        
+
+        return a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r + s + t + u + v + w + x + y + z;
+    }
+
+    function thisFunctionNameIsTooDamnLongForAFunctionToHave(){
+
+    }
+
+    // Function name too short
+    function sh(){
+
+    }
+
+    // function name uppercase
+    public string function UPPERCASEFUNCTIONNAME(){
+    }
+    
+    // Multiline function definition 
+    public 
+    string function MyMultiLineFunction(
+        required string firstParam,
+        string secondParam = "default",
+        numeric thirdParam = 10
+    ){
+        return "ok";
+    }
+    
+}

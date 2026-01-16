@@ -14,11 +14,11 @@ component extends="../BaseRule" {
         variables.message = "Found SQL query and related variables in code";
         variables.group = "OptionalRules";
         variables.enabled = false;
-        // variables.nodeTypes = "CFMLTag,CallExpression,AssignmentExpression"
+        variables.nodeTypes = "CFMLTag,CallExpression,AssignmentExpression"
 
 
         variables.parameters = {
-            "extensions": "cfm,cfml"
+            "extensions": "cfc,cfm,cfml"
         };
 
         return this;
@@ -34,13 +34,17 @@ component extends="../BaseRule" {
                             (node.type == "CFMLTag" && node.name == "query") //Query Tags
                             OR (node.type == "CallExpression"  //queryExecute
                             AND node?.callee?.type == "Identifier" 
-                            AND node?.callee?.name == "queryExecute")
+                            AND compareNoCase(node?.callee?.name ?: "", "queryExecute") == 0)
+                            OR (node.type == "AssignmentExpression" // var result = queryExecute(...)
+                                AND node?.right?.type == "CallExpression"
+                                AND node?.right?.callee?.type == "Identifier"
+                                AND compareNoCase(node?.right?.callee?.name ?: "", "queryExecute") == 0)
                         );
     
         // More complex check for Query object creation
         if( node.type == "AssignmentExpression" && node?.right?.type == "CallExpression" &&
             node?.right?.isBuiltIn == true &&
-            node?.right?.callee?.name == "_createcomponent"
+            compareNoCase(node?.right?.callee?.name ?: "", "_createcomponent") == 0
         ){
             var suspectedQueryComponentArguments = node?.right?.arguments;
             var foundQuery = suspectedQueryComponentArguments.filter(

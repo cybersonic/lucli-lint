@@ -33,7 +33,7 @@ component extends="testbox.system.BaseSpec"{
     
                 debug(module);
             it( "should find all sql variables in a page", () => {
-                var ret = module.main(file="../../artefacts/queries.cfm", format="raw", rules="SQL_CHECK");
+                var ret = module.main(file="../../artefacts/queries.cfm", format="raw", rules="SQL_CHECK", silent=true);
                 debug(ret);
                 expect( ret ).toBeArray( );
                 expect( ret.len() ).toBe( 25 );
@@ -44,7 +44,7 @@ component extends="testbox.system.BaseSpec"{
             } )
 
             it( "should find all sql variables in a CFC file", () => {
-                var ret = module.main(file="../../artefacts/components/com/myapp/services/SampleService.cfc", format="raw", rules="SQL_CHECK");
+                var ret = module.main(file="../../artefacts/components/com/myapp/services/SampleService.cfc", format="raw", rules="SQL_CHECK", silent=true);
                 debug(ret);
                 expect( ret ).toBeArray( );
                 expect( ret.len() ).toBe( 1 );

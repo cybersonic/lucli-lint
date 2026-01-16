@@ -36,11 +36,26 @@ component extends="testbox.system.BaseSpec"{
                 var ret = module.main(file="../../artefacts/queries.cfm", format="raw", rules="SQL_CHECK", silent=true);
                 debug(ret);
                 expect( ret ).toBeArray( );
-                expect( ret.len() ).toBe( 24 );
+                expect( ret.len() ).toBe( 25 );
 
                 var firstIssue = ret[1];
                 expect( firstIssue.getRuleCode() ).toBe( "SQL_CHECK" );
                 expect( firstIssue.getCode() ).toBe( 'qry = new Query("SELECT * FROM ELVIS")' );
+            } )
+
+            it( "should find all sql variables in a CFC file", () => {
+                var ret = module.main(file="../../artefacts/components/com/myapp/services/SampleService.cfc", format="raw", rules="SQL_CHECK", silent=true);
+                debug(ret);
+                expect( ret ).toBeArray( );
+                expect( ret.len() ).toBe( 1 );
+
+                var firstIssue = ret[1];
+                expect( firstIssue.getRuleCode() ).toBe( "SQL_CHECK" );
+                expect( firstIssue.getCode() ).toBe( 'var queryResult = queryExecute(
+            sql: "
+                select * from customers;
+            "
+        )' );
             } )
 
         } )

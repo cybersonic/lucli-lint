@@ -35,7 +35,7 @@ component extends="testbox.system.BaseSpec"{
                 // Test with a source file that does NOT have a corresponding test
                 var ret = module.main(
                     file = "../artefacts/components/com/myapp/utils/Helper.cfc",
-                    format = "silent",
+                    format = "raw",
                     rules = "UNIT_TEST_CHECK"
                 );
 
@@ -53,7 +53,7 @@ component extends="testbox.system.BaseSpec"{
                 // Test with a test file that does NOT have a corresponding source
                 var ret = module.main(
                     file = "../artefacts/unit_tests/testcases/com/myapp/orphan/OrphanTest.cfc",
-                    format = "silent",
+                    format = "raw",
                     rules = "UNIT_TEST_CHECK"
                 );
 
@@ -71,7 +71,7 @@ component extends="testbox.system.BaseSpec"{
                 // Test with a file that doesn't match the unit test regex pattern
                 var ret = module.main(
                     file = "../artefacts/queries.cfm",
-                    format = "silent",
+                    format = "raw",
                     rules = "UNIT_TEST_CHECK"
                 );
 

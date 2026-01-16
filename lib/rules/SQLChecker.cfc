@@ -14,7 +14,7 @@ component extends="../BaseRule" {
         variables.message = "Found SQL query and related variables in code";
         variables.group = "OptionalRules";
         variables.enabled = false;
-        variables.nodeTypes = "CFMLTag,CallExpression,AssignmentExpression"
+        //variables.nodeTypes = "CFMLTag,CallExpression,AssignmentExpression"
 
 
         variables.parameters = {

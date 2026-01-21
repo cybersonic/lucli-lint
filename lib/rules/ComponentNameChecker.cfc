@@ -159,4 +159,9 @@ component extends="../BaseRule" {
         
         return results;
     }
+
+
+    private function isTemporary(string name) {
+        return reFindNoCase("^(temp|tmp|test|foo|bar|baz|deleteme|delete_me)|(temp|tmp|test|foo|bar|baz|deleteme|delete_me)$", name);
+    }
 }

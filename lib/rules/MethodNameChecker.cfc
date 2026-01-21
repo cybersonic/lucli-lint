@@ -32,7 +32,6 @@ component extends="../BaseRule" {
         var results = [];
         
         var functionName = node.name.value ?: "";
-
       
         // Cant have a method without a name
         if(len(functionName) == 0){
@@ -69,6 +68,7 @@ component extends="../BaseRule" {
         }
         if (Compare(functionName, uCase(functionName)) == 0) {
 
+            
                  results.append(
                     createLintResult(
                         lintRule = this,
@@ -98,16 +98,30 @@ component extends="../BaseRule" {
                 )
             );
         }
+        if ( isTemporary(functionName) ) {
+                // 
+                var workdstoAvoid = listChangeDelims("temp|tmp|test|foo|bar|baz|deleteme|delete_me)|(temp|tmp|test|foo|bar|baz|deleteme|delete_me", ",", "|");
+                results.append(
+                    createLintResult(
+                        lintRule = this,
+                        node = arguments.node,
+                        fileName = arguments.fileName,
+                        fileContent = arguments.fileContent,
+                        code=functionPrototype,
+                        ruleCode="METHOD_IS_TEMPORARY",
+                        message="Method/Function #functionName# should not have names that are temporary such as #workdstoAvoid#"
+                    )
+                );
+        }
 
        
         
         // TODO: Implement check for method naming conventions
         // Should detect: METHOD_INVALID_NAME, ,
-        // ,METHOD_TOO_WORDY, METHOD_IS_TEMPORARY, METHOD_HAS_PREFIX_OR_POSTFIX
+        // ,, , METHOD_HAS_PREFIX_OR_POSTFIX
         
         return results;
     }
-
 
     function getWordsFromCamelCase(required string str) {
         var words = [];
@@ -126,4 +140,16 @@ component extends="../BaseRule" {
         }
         return words;
     }
+
+    // TODO: Maybe move to a utility class
+    /**
+     * Is the name temporary?.
+     *
+     * @param name name of variable.
+     * @return true if the name is temporary, false if it does not.
+    */
+    private function isTemporary(string name) {
+        return reFindNoCase("^(temp|tmp|test|foo|bar|baz|deleteme|delete_me)|(temp|tmp|test|foo|bar|baz|deleteme|delete_me)$", name);
+    }
+
 }

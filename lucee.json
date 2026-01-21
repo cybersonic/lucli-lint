@@ -1,17 +1,9 @@
 {
   "name" : "lucee-lint",
   "version" : "7.0.1.51-SNAPSHOT",
-  "port" : 8000,
+  "port" : 8888,
   "webroot" : "./",
-  "monitoring" : {
-    "enabled" : false,
-    "jmx" : {
-      "port" : 8003
-    }
-  },
-  "jvm" : {
-    "maxMemory" : "512m",
-    "minMemory" : "128m",
-    "additionalArgs" : [ ]
-  }
+  "openBrowser": true,
+  "openBrowserURL": "http://localhost:8888/tests/"
+
 }

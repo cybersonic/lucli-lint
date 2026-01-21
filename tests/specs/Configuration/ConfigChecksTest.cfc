@@ -19,10 +19,11 @@ component extends="testbox.system.BaseSpec"{
                 );
             debug(sut);
 
-            it( "A Spec", () => {
-                var ret = sut.main(folder=".");
+            it( "should return a results key", () => {
+                var ret = sut.main(folder=".", format="raw", silent=true);
                 debug(sut.getRuleConfig() );
                 debug(ret, "results");
+                expect(ret).toBeArray();
                
             } )
 

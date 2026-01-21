@@ -120,6 +120,10 @@ component {
 
     }
 
+
+    // function name with temp in it
+    public string function tempFunctionName(){
+    }
     // function name uppercase
     public string function UPPERCASEFUNCTIONNAME(){
     }

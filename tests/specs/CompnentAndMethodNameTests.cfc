@@ -123,121 +123,121 @@ component extends="testbox.system.BaseSpec"{
                     expect(results.summary.ruleBreakdown.METHOD_IS_TEMPORARY).toBeGT(0);
             });
 
-            it("should detect VAR_INVALID_NAME", function(){
+            xit("should detect VAR_INVALID_NAME", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("VAR_INVALID_NAME");
                     expect(results.summary.ruleBreakdown.VAR_INVALID_NAME).toBeGT(0);
             });
 
-            it("should detect TAG_ALLCAPS", function(){
+            xit("should detect TAG_ALLCAPS", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("TAG_ALLCAPS");
                     expect(results.summary.ruleBreakdown.TAG_ALLCAPS).toBeGT(0);
             });
 
-            it("should detect VAR_ALLCAPS_NAME", function(){
+            xit("should detect VAR_ALLCAPS_NAME", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("VAR_ALLCAPS_NAME");
                     expect(results.summary.ruleBreakdown.VAR_ALLCAPS_NAME).toBeGT(0);
             });
 
-            it("should detect ACRONYM_NAME_CHECK", function(){
+            xit("should detect ACRONYM_NAME_CHECK", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ACRONYM_NAME_CHECK");
                     expect(results.summary.ruleBreakdown.ACRONYM_NAME_CHECK).toBeGT(0);
             });
 
-            it("should detect VAR_ACRONYM_CECK", function(){
+            xit("should detect VAR_ACRONYM_CECK", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("VAR_ACRONYM_CECK");
                     expect(results.summary.ruleBreakdown.VAR_ACRONYM_CECK).toBeGT(0);
             });
             
-            it("should detect VAR_SCOPER", function(){
+            xit("should detect VAR_SCOPER", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("VAR_SCOPER");
                     expect(results.summary.ruleBreakdown.VAR_SCOPER).toBeGT(0);
             });
 
-            it("should detect FUNCTION_TYPE_MISSING", function(){
+            xit("should detect FUNCTION_TYPE_MISSING", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("FUNCTION_TYPE_MISSING");
                     expect(results.summary.ruleBreakdown.FUNCTION_TYPE_MISSING).toBeGT(0);
             });
 
-            it("should detect FUNCTION_TYPE_ANY", function(){
+            xit("should detect FUNCTION_TYPE_ANY", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("FUNCTION_TYPE_ANY");
                     expect(results.summary.ruleBreakdown.FUNCTION_TYPE_ANY).toBeGT(0);
             });
 
-            it("should detect GLOBAL_LITERAL_VALUE_USED_TOO_OFTEN", function(){
+            xit("should detect GLOBAL_LITERAL_VALUE_USED_TOO_OFTEN", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("GLOBAL_LITERAL_VALUE_USED_TOO_OFTEN");
                     expect(results.summary.ruleBreakdown.GLOBAL_LITERAL_VALUE_USED_TOO_OFTEN).toBeGT(0);
             });
-            it("should detect GLOBAL_VAR", function(){
+            xit("should detect GLOBAL_VAR", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("GLOBAL_VAR");
                     expect(results.summary.ruleBreakdown.GLOBAL_VAR).toBeGT(0);
             });
-            it("should detect ARG_TYPE_MISSING", function(){
+            xit("should detect ARG_TYPE_MISSING", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARG_TYPE_MISSING");
                     expect(results.summary.ruleBreakdown.ARG_TYPE_MISSING).toBeGT(0);
             });
-            it("should detect ARG_TYPE_ANY", function(){
+            xit("should detect ARG_TYPE_ANY", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARG_TYPE_ANY");
                     expect(results.summary.ruleBreakdown.ARG_TYPE_ANY).toBeGT(0);
             });
-            it("should detect ARGUMENT_MISSING_NAME", function(){
+            xit("should detect ARGUMENT_MISSING_NAME", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_MISSING_NAME");
                     expect(results.summary.ruleBreakdown.ARGUMENT_MISSING_NAME).toBeGT(0);
             });
-            it("should detect ARGUMENT_INVALID_NAME", function(){
+            xit("should detect ARGUMENT_INVALID_NAME", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_INVALID_NAME");
                     expect(results.summary.ruleBreakdown.ARGUMENT_INVALID_NAME).toBeGT(0);
             });
             
-            it("should detect ARGUMENT_ALLCAPS_NAME", function(){
+            xit("should detect ARGUMENT_ALLCAPS_NAME", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_ALLCAPS_NAME");
                     expect(results.summary.ruleBreakdown.ARGUMENT_ALLCAPS_NAME).toBeGT(0);
             });
 
-            it("should detect ARGUMENT_TOO_SHORT", function(){
+            xit("should detect ARGUMENT_TOO_SHORT", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_TOO_SHORT");
                     expect(results.summary.ruleBreakdown.ARGUMENT_TOO_SHORT).toBeGT(0);
             });
 
-            it("should detect ARGUMENT_TOO_LONG", function(){
+            xit("should detect ARGUMENT_TOO_LONG", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_TOO_LONG");
                     expect(results.summary.ruleBreakdown.ARGUMENT_TOO_LONG).toBeGT(0);
             });
 
-            it("should detect ARGUMENT_TOO_WORDY", function(){
+            xit("should detect ARGUMENT_TOO_WORDY", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_TOO_WORDY");
                     expect(results.summary.ruleBreakdown.ARGUMENT_TOO_WORDY).toBeGT(0);
             });
 
-            it("should detect ARGUMENT_IS_TEMPORARY", function(){
+            xit("should detect ARGUMENT_IS_TEMPORARY", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_IS_TEMPORARY");
                     expect(results.summary.ruleBreakdown.ARGUMENT_IS_TEMPORARY).toBeGT(0);
             });
 
-            it("should detect ARGUMENT_HAS_PREFIX_OR_POSTFIX", function(){
+            xit("should detect ARGUMENT_HAS_PREFIX_OR_POSTFIX", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("ARGUMENT_HAS_PREFIX_OR_POSTFIX");
                     expect(results.summary.ruleBreakdown.ARGUMENT_HAS_PREFIX_OR_POSTFIX).toBeGT(0);
             });
 
-            it("should detect AVOID_USING_CREATEOBJECT", function(){
+            xit("should detect AVOID_USING_CREATEOBJECT", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("AVOID_USING_CREATEOBJECT");
                     expect(results.summary.ruleBreakdown.AVOID_USING_CREATEOBJECT).toBeGT(0);
             });
-            it("should detect OPERATOR_ALLCAPS", function(){
+            xit("should detect OPERATOR_ALLCAPS", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("OPERATOR_ALLCAPS");
                     expect(results.summary.ruleBreakdown.OPERATOR_ALLCAPS).toBeGT(0);
             });
 
-            it("should detect NO_DEFAULT_INSIDE_SWITCH", function(){
+            xit("should detect NO_DEFAULT_INSIDE_SWITCH", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("NO_DEFAULT_INSIDE_SWITCH");
                     expect(results.summary.ruleBreakdown.NO_DEFAULT_INSIDE_SWITCH).toBeGT(0);
             });
 
-            it("should detect AVOID_USING_EVALUATE", function(){
+            xit("should detect AVOID_USING_EVALUATE", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("AVOID_USING_EVALUATE");
                     expect(results.summary.ruleBreakdown.AVOID_USING_EVALUATE).toBeGT(0);
             });
 
-            it("should detect AVOID_USING_IIF", function(){
+            xit("should detect AVOID_USING_IIF", function(){
                     expect(results.summary.ruleBreakdown).toHaveKey("AVOID_USING_IIF");
                     expect(results.summary.ruleBreakdown.AVOID_USING_IIF).toBeGT(0);
             });

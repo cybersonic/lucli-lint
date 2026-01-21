@@ -1,40 +1,4 @@
 
-/**
- * this is a generic test for the most usual style guide rules For example:
- * COMPONENT_ALLCAPS_NAME
-COMPONENT_INVALID_NAME
-COMPONENT_TOO_WORDY
-COMPONENT_IS_TEMPORARY
-FILE_SHOULD_START_WITH_LOWERCASE
-PACKAGE_CASE_MISMATCH
-EXCESSIVE_FUNCTION_LENGTH
-METHOD_INVALID_NAME
-VAR_INVALID_NAME
-TAG_ALLCAPS
-VAR_ALLCAPS_NAME
-ACRONYM_NAME_CHECK
-VAR_ACRONYM_CECK
-VAR_SCOPER
-FUNCTION_TYPE_MISSING
-FUNCTION_TYPE_ANY
-GLOBAL_LITERAL_VALUE_USED_TOO_OFTEN
-GLOBAL_VAR
-ARG_TYPE_MISSING
-ARG_TYPE_ANY
-ARGUMENT_MISSING_NAME
-ARGUMENT_INVALID_NAME
-ARGUMENT_ALLCAPS_NAME
-ARGUMENT_TOO_SHORT
-ARGUMENT_TOO_LONG
-ARGUMENT_TOO_WORDY
-ARGUMENT_IS_TEMPORARY
-ARGUMENT_HAS_PREFIX_OR_POSTFIX
-AVOID_USING_CREATEOBJECT
-OPERATOR_ALLCAPS
-NO_DEFAULT_INSIDE_SWITCH
-AVOID_USING_EVALUATE
-AVOID_USING_IIF
- */
 component extends="testbox.system.BaseSpec"{
 
 /*********************************** LIFE CYCLE Methods ***********************************/
@@ -45,7 +9,7 @@ component extends="testbox.system.BaseSpec"{
     function run( testResults, testBox ){
 
         
-        describe("CFML Linter - Code Style Guide Rules", function(){
+        describe("Component Method and Name Tests", function(){
             var  module = new Module(
                             verboseEnabled : false,
                             timingEnabled : false,

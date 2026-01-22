@@ -71,14 +71,20 @@ abstract component accessors=true {
      */
     function setParameters(required struct params) {
 
-        if(arguments.params.keyExists("enabled")){
-            variables.enabled = arguments.params.enabled;
-        }
-        // Loop over parameters and set them
-        if(arguments.params.keyExists("parameters")){
-            for(var paramName in arguments.params.parameters){
-                setParameter( paramName, arguments.params.parameters[paramName] );
+
+        for(var paramName in arguments.params){
+            if(paramName == "enabled") {
+                variables.enabled = arguments.params.enabled;
+                continue;
             }
+
+            if(paramName == "severity" ){
+                variables.severity = arguments.params.severity;
+                continue;
+            }
+
+
+            setParameter( paramName, arguments.params[paramName] );
         }
 
         return this;

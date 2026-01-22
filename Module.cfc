@@ -62,12 +62,9 @@ component accessors="true" extends="modules.BaseModule" {
         
         var configPath = Len(arguments.config) ? arguments.config : variables.cwd & "/.lucli-lint.json";
        
-        
         variables.timer.start("Load Rule Configuration");
-        var RuleConfig = nullValue();
-        RuleConfig = createObject("component", "lib.RuleConfiguration").init(configPath=configPath, configStruct=configStruct);
+        var RuleConfig = new lib.RuleConfiguration(configPath=configPath, configStruct=configStruct);
     
-       
         variables.RuleConfig = RuleConfig;
         // Add the timer for debugging
         RuleConfig.setTimer( variables.Timer );

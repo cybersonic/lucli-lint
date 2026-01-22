@@ -28,7 +28,8 @@ component accessors="true" {
             loggingEnabled: false,
             logFile: "",
             logTimeUnits: "milli",
-            maxIssues: 0 // 0 = unlimited
+            maxIssues: 0, // 0 = unlimited
+            allRulesEnabled: true
         }; 
     
 
@@ -74,6 +75,9 @@ component accessors="true" {
             var ruleName = listFirst(ruleClass, ".");
             var rule = createObject("component", "rules.#ruleName#").init();
             var ruleCode = rule.getRuleCode();
+
+            // Set it if it is enabled or disabled. 
+            rule.setEnabled( variables.globalSettings.allRulesEnabled ?: true );
             if(variables.ruleSettings.KeyExists(ruleCode)){
                 // Override the paramters from the config
                 rule.setParameters(variables.ruleSettings[ruleCode]);

@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LuCLI CFML Linter configuration",
+  "description": "Configuration file for the LuCLI CFML linter module (.lucli-lint*.json).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "global": {
+      "type": "object",
+      "description": "Global linter behaviour. These settings are read into RuleConfiguration.globalSettings and used by the linter where applicable.",
+      "properties": {
+        "outputFormat": {
+          "type": "string",
+          "description": "Default output format to use when the CLI does not explicitly override it.",
+          "enum": [
+            "text",
+            "json",
+            "xml",
+            "bitbucket",
+            "raw",
+            "tsc",
+            "report"
+          ],
+          "default": "text"
+        },
+        "showRuleNames": {
+          "type": "boolean",
+          "description": "Whether to show rule codes/names in textual output (currently reserved; included for compatibility).",
+          "default": true
+        },
+        "ignoreParseErrors": {
+          "type": "boolean",
+          "description": "If true, files that fail to parse are skipped instead of producing a FAILURE lint result.",
+          "default": false
+        },
+        "exitOnError": {
+          "type": "boolean",
+          "description": "If true, the CLI may choose a non‑zero exit code when any ERROR or FAILURE results are present (reserved; included for compatibility).",
+          "default": false
+        },
+        "loggingEnabled": {
+          "type": "boolean",
+          "description": "Reserved flag indicating whether timing/logging is enabled. Actual logging is controlled by logFile being non‑empty.",
+          "default": false
+        },
+        "logFile": {
+          "type": "string",
+          "description": "Optional path to a log file. When set (and wired by the caller), CFMLLinter appends per‑file and per‑rule timing information via RuleConfiguration.logFile.",
+          "default": ""
+        },
+        "logTimeUnits": {
+          "type": "string",
+          "description": "Time units passed to getTickCount for timing (e.g. 'milli', 'ms'). Controls how durations are reported in the log file.",
+          "default": "milli"
+        },
+        "maxIssues": {
+          "type": "integer",
+          "description": "Maximum number of issues to report before the CLI may choose to stop (0 = unlimited; reserved, included for compatibility).",
+          "minimum": 0,
+          "default": 0
+        },
+        "allRulesEnabled": {
+          "type": "boolean",
+          "description": "Initial on/off switch for all rules. Each discovered rule is created with this enabled flag before per‑rule settings are applied.",
+          "default": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "rules": {
+      "type": "object",
+      "description": "Per‑rule configuration keyed by rule code (e.g. 'SQL_CHECK', 'COMPONENT_INVALID_NAME'). Only rules that appear here are customised; others use their built‑in defaults.",
+      "additionalProperties": {
+        "$ref": "#/definitions/ruleConfig"
+      }
+    },
+    "ignoreFiles": {
+      "type": "array",
+      "description": "Glob patterns (matched against absolute paths) for files and folders that should be excluded from linting.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "includes": {
+      "type": "array",
+      "description": "Optional list of folder patterns (relative to the working directory) to include when scanning for CFML files. If omitted, the folder passed to the linter is used directly.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "excludes": {
+      "type": "array",
+      "description": "Reserved for future use: additional folder patterns to exclude from scanning.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "definitions": {
+    "ruleConfig": {
+      "type": "object",
+      "description": "Configuration for a single rule. The linter honours 'enabled' plus any rule‑specific parameters that the rule implementation reads.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this rule is enabled. This value is merged into the rule's enabled flag when rules are instantiated.",
+          "default": true
+        }
+      },
+      "additionalProperties": {
+        "description": "Rule‑specific configuration. For example, COMPONENT_INVALID_NAME supports minLength, maxLength, maxWords, case; SQL_CHECK supports extensions, etc.",
+        "type": ["string", "number", "boolean", "object", "array", "null"]
+      }
+    }
+  },
+  "examples": [
+    {
+      "global": {
+        "outputFormat": "text",
+        "showRuleNames": true,
+        "ignoreParseErrors": true,
+        "exitOnError": false,
+        "maxIssues": 0,
+        "allRulesEnabled": false
+      },
+      "rules": {
+        "SQL_CHECK": {
+          "enabled": true,
+          "extensions": "cfm,cfc,cfml"
+        },
+        "COMPONENT_INVALID_NAME": {
+          "enabled": true,
+          "maxLength": 25,
+          "maxWords": 5
+        }
+      },
+      "ignoreFiles": [
+        "**/devops/**",
+        "**/slaps/**",
+        "**/unit_tests/testbox/**",
+        "unit_tests/testcases/system/compile/resources/throwerror_example.cfm"
+      ]
+    }
+  ]
+}

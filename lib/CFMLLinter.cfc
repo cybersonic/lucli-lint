@@ -476,7 +476,7 @@ component accessors="true" {
             case "xml":
                 return formatResultsAsXML(arguments.results); 
             case "bitbucket":
-                return formatResultsAsBitbucket(arguments.results);
+                return formatResultsAsBitbucket(arguments.results, arguments.compact);
             case "raw":
                 return arguments.results;
             case "tsc":
@@ -662,7 +662,7 @@ component accessors="true" {
         }
      * 
      */
-    function formatResultsAsBitbucket(required array results) {
+    function formatResultsAsBitbucket(required array results, boolean compact = false) {
         // Bitbucket Code Insights format
         var bitbucketReport = {       
             "title": "Linter Report",
@@ -756,7 +756,7 @@ component accessors="true" {
             arrayAppend(bitbucketReport.annotations, annotation);
         }
         
-        return serializeJSON(bitbucketReport);
+        return serializeJSON(var=bitbucketReport, compact: arguments.compact);
     }
 
     function out(any message){

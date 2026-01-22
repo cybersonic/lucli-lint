@@ -31,8 +31,8 @@ component extends="../BaseRule" {
     function check(required struct node, required any helper, string fileName = "", string fileContent="") {
         var results = [];
         
-        
-        
+
+       
         // Only check .cfc files
         if (len(arguments.fileName) > 0) {
             var extension = listLast(arguments.fileName, ".");
@@ -49,10 +49,6 @@ component extends="../BaseRule" {
             var maxLength = getParameter("maxLength", 15);
             var maxWords = getParameter("maxWords", 3);
             var caseStyle = getParameter("case", "PascalCase");
-
-            
-            
-
 
             
             var issueCode = "";
@@ -134,17 +130,21 @@ component extends="../BaseRule" {
             }
             // Check for temporary-looking names
             if (reFindNoCase("^(temp|tmp|test|foo|bar|baz|deleteme|delete_me)|(temp|tmp|test|foo|bar|baz|deleteme|delete_me)$", componentName)) {
-                results.append(
-                    createLintResult(
-                        lintRule = this,
-                        node = arguments.node,
-                        fileName = arguments.fileName,
-                        fileContent = arguments.fileContent,
-                        variable=componentName,
-                        ruleCode="COMPONENT_IS_TEMPORARY",
-                        message="Component name #componentName# could be named better"
-                    )
-                );
+                // Tests end with temporary names, so ignore if the filename ends with "Test"
+                // TODO: Make this configurable
+                if(!lcase(componentName).endsWith("test"))  {
+                    results.append(
+                        createLintResult(
+                            lintRule = this,
+                            node = arguments.node,
+                            fileName = arguments.fileName,
+                            fileContent = arguments.fileContent,
+                            variable=componentName,
+                            ruleCode="COMPONENT_IS_TEMPORARY",
+                            message="Component name #componentName# could be named better"
+                        )
+                    );
+                }
             }
 
 

@@ -731,9 +731,9 @@ component accessors="true" {
             count++;
             var annotation = {
                 "external_id": "lucee_lint_report-#numberFormat(count, "000")#",
-                "title": "[" & result.getRuleCode() & "] " & result.getFormattedMessage(),
+                "title": result.getRuleName(),
                 "annotation_type": "CODE_SMELL", //TODO: map type 
-                "summary": result.getCode(),
+                "summary": "[" & result.getRuleCode() & "] " & result.getFormattedMessage(),
                 "path": relativePath,
                 "severity": uCase(result.getSeverity()),
                 "line": result.getLine(),

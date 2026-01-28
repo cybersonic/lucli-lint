@@ -98,6 +98,9 @@ abstract component accessors=true {
         return this;
     }
 
+    function getParameters() {
+        return variables.parameters ?: {};
+    }
 
     /**
      * Create a LintResult for this rule
@@ -173,7 +176,7 @@ abstract component accessors=true {
             "message": variables.message,
             "group": variables.group,
             "enabled": variables.enabled,
-            "parameters": variables.parameters
+            "parameters": variables.parameters ?: {}
         };
     }
 }

@@ -70,8 +70,11 @@ component extends="../BaseRule" {
         var sqlVariable = "";
         var hasSQLVariables = false;
         var variableAssignments = [];   
-        var sqlContents = MID(fileContent, node.start.offset, node.end.offset - node.start.offset);
-
+        
+        // Avoid it being zero
+        var bodyStart = node.start.offset LT 1 ? 1 : node.start.offset;
+        var bodyLen = node.end.offset - node.start.offset;
+        var sqlContents = MID(fileContent, bodyStart,bodyLen);      
         // Handle queryExecute with positional items
         if( node.keyExists("arguments") && node.arguments.len() && node.arguments[1].type == "Identifier"  ){
             hasSQLVariables = true;

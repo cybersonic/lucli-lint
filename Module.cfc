@@ -230,6 +230,76 @@ component accessors="true" extends="modules.BaseModule" {
         return "Help information displayed";
     }
 
+    function showRuleParams(){
+        // Build JSON Schema fragments for each rule's config block
+        var ruleConfig = new lib.RuleConfiguration();
+        var allRules   = ruleConfig.getRules();
+
+        // This will become: { "rules": { "SQL_CHECK": { ...schema... }, ... } }
+        var res = { "rules": {} };
+
+        // Helper: infer JSON Schema type from a CFML value
+        var inferJsonType = function(value){
+            if (isBoolean(arguments.value)) {
+                return "boolean";
+            }
+            if (isNumeric(arguments.value)) {
+                // Distinguish integer vs number
+                return (int(arguments.value) EQ arguments.value) ? "integer" : "number";
+            }
+            if (isArray(arguments.value)) {
+                return "array";
+            }
+            if (isStruct(arguments.value)) {
+                return "object";
+            }
+            // We almost never have nulls here because rule params have defaults
+            return "string";
+        };
+
+        for (var ruleCode in allRules) {
+            var rule       = allRules[ruleCode];
+            var params     = rule.getParameters() ?: {};
+            var ruleInfo   = rule.getRuleInfo();
+            var paramProps = {};
+
+            // Only bother emitting schema for rules that actually have parameters
+            if (structIsEmpty(params)) {
+                continue;
+            }
+
+            // Build per‑parameter property schema from the default values
+            for (var paramName in params) {
+                var defaultValue = params[paramName];
+                paramProps[paramName] = {
+                    "type":   inferJsonType(defaultValue),
+                    "default": defaultValue
+                };
+            }
+
+            // Each entry here is what you'll paste under schema.properties.rules.properties.<RULE_CODE>
+            res.rules[ruleCode] = {
+                "type": "object",
+                "description": ruleInfo.description ?: (
+                    "Configuration for " & ruleInfo.ruleCode & " (" & ruleInfo.ruleName & ")"
+                ),
+                "allOf": [
+                    // Reuse the generic ruleConfig constraints
+                    { "$ref": "##/definitions/ruleConfig" },
+                    // Add strongly‑typed rule‑specific parameters
+                    {
+                        "properties": paramProps
+                    }
+                ]
+            };
+        }
+
+        // Pretty JSON for copy‑paste into schema/v1/lucli-lint.schema.json
+        out( serializeJSON(var = res, compact = false) );
+
+        return res;
+    }
+
     private function verbose(any message){
         if(variables.verboseEnabled){
             out(message);

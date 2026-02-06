@@ -743,16 +743,25 @@ component accessors="true" {
             
             // Map severity to Bitbucket types
             if (result.getSeverity() == "ERROR" OR result.getSeverity() == "FAILURE") {
-                annotation.type = "BUG";
-                annotation.severity = "HIGH";
+                annotation["type"] = "BUG";
+                annotation["severity"] = "HIGH";
             } else if (result.getSeverity() == "WARNING") {
-                annotation.type = "CODE_SMELL";
-                annotation.severity = "MEDIUM";
+                annotation["type"] = "CODE_SMELL";
+                annotation["severity"] = "MEDIUM";
             } else {
-                annotation.type = "CODE_SMELL";
-                annotation.severity = "LOW";
+                annotation["type"] = "CODE_SMELL";
+                annotation["severity"] = "LOW";
             }
             
+            // File based annotations (no line) should not have a line and end_line so they are attached to the whole line
+            var fileBasedAnnotationTypes = ["FILE_SHOULD_START_WITH_LOWERCASE","COMPONENT_INVALID_NAME"];
+            if (arrayContainsNoCase(fileBasedAnnotationTypes, result.getRuleCode())) {
+                structDelete(annotation, "line");
+                structDelete(annotation, "end_line");
+            }
+           
+
+
             arrayAppend(bitbucketReport.annotations, annotation);
         }
         

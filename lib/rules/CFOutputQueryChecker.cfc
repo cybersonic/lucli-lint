@@ -30,6 +30,10 @@ component extends="../BaseRule" {
     function check(required struct node, required any helper, string fileName = "", string fileContent="") {
         var results = [];
 
+        if( node.name != "output" ){
+            return results;
+        }
+        
 
         var queryAttrbutes = node.attributes.filter((it)=>{
             return ( it.name.toLowerCase() == "query" );

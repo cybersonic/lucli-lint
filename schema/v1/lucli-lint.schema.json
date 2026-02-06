@@ -12,15 +12,7 @@
         "outputFormat": {
           "type": "string",
           "description": "Default output format to use when the CLI does not explicitly override it.",
-          "enum": [
-            "text",
-            "json",
-            "xml",
-            "bitbucket",
-            "raw",
-            "tsc",
-            "report"
-          ],
+          "enum": ["text", "json", "xml", "bitbucket", "raw", "tsc", "report"],
           "default": "text"
         },
         "showRuleNames": {
@@ -72,6 +64,197 @@
       "description": "Per‑rule configuration keyed by rule code (e.g. 'SQL_CHECK', 'COMPONENT_INVALID_NAME'). Only rules that appear here are customised; others use their built‑in defaults.",
       "additionalProperties": {
         "$ref": "#/definitions/ruleConfig"
+      },
+      "properties": {
+        "UNIT_TEST_CHECK": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "unit_test_regex": {
+                  "default": "",
+                  "type": "string"
+                },
+                "test_folder": {
+                  "default": "",
+                  "type": "string"
+                },
+                "source_folder": {
+                  "default": "",
+                  "type": "string"
+                }
+              }
+            }
+          ],
+          "description": "Find unit tests in code files"
+        },
+        "METHOD_INVALID_NAME": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "maxWords": {
+                  "default": 5,
+                  "type": "boolean"
+                },
+                "maxLength": {
+                  "default": 25,
+                  "type": "boolean"
+                },
+                "case": {
+                  "default": "camelCase",
+                  "type": "string"
+                },
+                "minLength": {
+                  "default": 3,
+                  "type": "boolean"
+                }
+              }
+            }
+          ],
+          "description": "Method has invalid name"
+        },
+        "EXCESSIVE_FUNCTION_LENGTH": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "length": {
+                  "default": 100,
+                  "type": "boolean"
+                }
+              }
+            }
+          ],
+          "description": "Method is too long"
+        },
+        "FUNCTION_TOO_COMPLEX": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "maximum": {
+                  "default": 10,
+                  "type": "boolean"
+                }
+              }
+            }
+          ],
+          "description": "Function is too complex"
+        },
+        "AVOID_USING_DUMP": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "extensions": {
+                  "default": "cfm,cfml,cfc",
+                  "type": "string"
+                }
+              }
+            }
+          ],
+          "description": "Avoid use of dump statements"
+        },
+        "COMPONENT_INVALID_NAME": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "maxWords": {
+                  "default": 3,
+                  "type": "boolean"
+                },
+                "maxLength": {
+                  "default": 15,
+                  "type": "boolean"
+                },
+                "case": {
+                  "default": "PascalCase",
+                  "type": "string"
+                },
+                "minLength": {
+                  "default": 3,
+                  "type": "boolean"
+                }
+              }
+            }
+          ],
+          "description": "Component has invalid name"
+        },
+        "SQL_CHECK": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "extensions": {
+                  "default": "cfc,cfm,cfml",
+                  "type": "string"
+                }
+              }
+            }
+          ],
+          "description": "Find SQL queries in code files"
+        },
+        "AVOID_USING_ABORT": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "extensions": {
+                  "default": "cfm,cfml,cfc",
+                  "type": "string"
+                },
+                "tagOnly": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              }
+            }
+          ],
+          "description": "Avoid use of abort statements"
+        },
+        "AVOID_CFOUTPUT_QUERY": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ruleConfig"
+            },
+            {
+              "properties": {
+                "extensions": {
+                  "default": "cfm,cfml,cfc",
+                  "type": "string"
+                }
+              }
+            }
+          ],
+          "description": "Avoid use of cfoutput with query attribute"
+        }
       }
     },
     "ignoreFiles": {

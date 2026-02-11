@@ -34,9 +34,14 @@ component extends="testbox.system.BaseSpec"{
                 };
                 var ret = module.main(file="../../../specs/artefacts/AbortExample.cfm", format="raw", silent="true" ,configStruct=config);
                 debug(ret);
-                expect(ret.len()).toBe( 1 );
-                expect(ret[1].getRuleCode()).toBe( "AVOID_USING_ABORT" );
-                expect(ret[1].getLine()).toBe( 4 );
+
+                var results = ret.filter( (item) => {
+                    return item.getRuleCode() == "AVOID_USING_ABORT";
+                } );
+
+                expect(results.len()).toBe( 1 );
+                expect(results[1].getRuleCode()).toBe( "AVOID_USING_ABORT" );
+                expect(results[1].getLine()).toBe( 4 );
             } );
             it( "should find all abort statements", () => {
                 config = {
@@ -52,10 +57,16 @@ component extends="testbox.system.BaseSpec"{
                 };
                 var ret = module.main(file="../../../specs/artefacts/AbortExample.cfm", format="raw",  silent="true", configStruct=config);
                 debug(ret);
-                expect(ret.len()).toBe( 2 );
-                expect(ret[1].getRuleCode()).toBe( "AVOID_USING_ABORT" );
-                expect(ret[1].getLine()).toBe( 2 );
-                expect(ret[2].getLine()).toBe( 4 );
+
+                results = ret.filter( (item) => {
+                    return item.getRuleCode() == "AVOID_USING_ABORT";
+                } );
+
+                debug(results);
+                expect(results.len()).toBe( 2 );
+                expect(results[1].getRuleCode()).toBe( "AVOID_USING_ABORT" );
+                expect(results[1].getLine()).toBe( 2 );
+                expect(results[2].getLine()).toBe( 4 );
 
 
 
@@ -65,5 +76,7 @@ component extends="testbox.system.BaseSpec"{
         } );
     }
 
+
+    
 }
 

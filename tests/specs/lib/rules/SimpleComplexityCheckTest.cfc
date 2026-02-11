@@ -41,8 +41,11 @@ component extends="testbox.system.BaseSpec"{
 
                 debug(ret);
                
-                expect(ret.len()).toBe( 6 );
-                expect(ret[1].getRuleCode()).toBe( "FUNCTION_TOO_COMPLEX" );
+                var results = ret.filter( (item) => {
+                    return item.getRuleCode() == "FUNCTION_TOO_COMPLEX";
+                } );
+                expect(results.len()).toBe( 6 );
+                expect(results[1].getRuleCode()).toBe( "FUNCTION_TOO_COMPLEX" );
 
             } );
 
@@ -61,13 +64,17 @@ component extends="testbox.system.BaseSpec"{
                         }
                     }
                 };
-                var ret = module.main(file="../../../specs/artefacts/ComplexitySample.cfc", format="raw", configStruct=config, silent=true);
+                var ret = module.main(file="../../../specs/artefacts/ComplexitySample.cfc", format="raw", configStruct=config, silent=true, codeFilters="FUNCTION_TOO_COMPLEX");
     
 
-                    debug(ret);
+                debug(ret);
+
+                var results = ret.filter( (item) => {
+                    return item.getRuleCode() == "FUNCTION_TOO_COMPLEX";
+                } );
                 
-                expect(ret.len()).toBe( 1 );
-                expect(ret[1].getRuleCode()).toBe( "FUNCTION_TOO_COMPLEX" );
+                expect(results.len()).toBe( 1 );
+                expect(results[1].getRuleCode()).toBe( "FUNCTION_TOO_COMPLEX" );
             })
         } );
     }

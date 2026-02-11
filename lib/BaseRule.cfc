@@ -71,14 +71,20 @@ abstract component accessors=true {
      */
     function setParameters(required struct params) {
 
-        if(arguments.params.keyExists("enabled")){
-            variables.enabled = arguments.params.enabled;
-        }
-        // Loop over parameters and set them
-        if(arguments.params.keyExists("parameters")){
-            for(var paramName in arguments.params.parameters){
-                setParameter( paramName, arguments.params.parameters[paramName] );
+
+        for(var paramName in arguments.params){
+            if(paramName == "enabled") {
+                variables.enabled = arguments.params.enabled;
+                continue;
             }
+
+            if(paramName == "severity" ){
+                variables.severity = arguments.params.severity;
+                continue;
+            }
+
+
+            setParameter( paramName, arguments.params[paramName] );
         }
 
         return this;
@@ -92,6 +98,9 @@ abstract component accessors=true {
         return this;
     }
 
+    function getParameters() {
+        return variables.parameters ?: {};
+    }
 
     /**
      * Create a LintResult for this rule
@@ -102,14 +111,19 @@ abstract component accessors=true {
         required string fileName = "",
         required string fileContent = "",
         string ruleCode = "",
-        string message = ""
+        string message = "",
+        string severity = "",
+        any variable = nullValue(),
+        any code = nullValue()
     ){
 
         var lintResult = new LintResult(
             rule : arguments.lintRule,
             node : arguments.node,
             fileName : arguments.fileName,
-            fileContent : arguments.fileContent
+            fileContent : arguments.fileContent,
+            message : arguments.message,
+            severity: arguments.severity
         );
 
         if(!isEmpty(arguments.ruleCode)){
@@ -118,6 +132,14 @@ abstract component accessors=true {
 
         if(!isEmpty(arguments.message)){
             lintResult.setMessage(arguments.message);
+        }
+
+        if(!isNull(arguments.variable)){
+            lintResult.setVariable(arguments.variable);
+        }
+
+        if(!isNull(arguments.code)){
+            lintResult.setCode(arguments.code);
         }
 
         return lintResult;
@@ -137,7 +159,7 @@ abstract component accessors=true {
     }
 
     function isUpperCase(required string str) {
-        return arguments.str == ucase(arguments.str);
+        return Compare(arguments.str, ucase(arguments.str) ) == 0;
     }
 
     
@@ -154,7 +176,7 @@ abstract component accessors=true {
             "message": variables.message,
             "group": variables.group,
             "enabled": variables.enabled,
-            "parameters": variables.parameters
+            "parameters": variables.parameters ?: {}
         };
     }
 }

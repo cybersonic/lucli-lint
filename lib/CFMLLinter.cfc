@@ -71,7 +71,8 @@ component accessors="true" {
                         end: { line: 0, column: 0, offset: 0 }
                     },
                     fileName: arguments.filePath,
-                    fileContent: ""
+                    fileContent: "",
+                    severity: "FAILURE"
                 );
             
             var TagContext = e.TagContext ?: [];
@@ -274,7 +275,7 @@ component accessors="true" {
 
 
 
-            variables.timer._stop(ruleItem);
+            // variables.timer.stop(ruleItem);
             results.append(ruleResults, true);
         }
 
@@ -475,7 +476,7 @@ component accessors="true" {
             case "xml":
                 return formatResultsAsXML(arguments.results); 
             case "bitbucket":
-                return formatResultsAsBitbucket(arguments.results);
+                return formatResultsAsBitbucket(arguments.results, arguments.compact);
             case "raw":
                 return arguments.results;
             case "tsc":
@@ -661,7 +662,7 @@ component accessors="true" {
         }
      * 
      */
-    function formatResultsAsBitbucket(required array results) {
+    function formatResultsAsBitbucket(required array results, boolean compact = false) {
         // Bitbucket Code Insights format
         var bitbucketReport = {       
             "title": "Linter Report",
@@ -730,9 +731,9 @@ component accessors="true" {
             count++;
             var annotation = {
                 "external_id": "lucee_lint_report-#numberFormat(count, "000")#",
-                "title": "[" & result.getRuleCode() & "] " & result.getFormattedMessage(),
+                "title": result.getRuleName(),
                 "annotation_type": "CODE_SMELL", //TODO: map type 
-                "summary": result.getCode(),
+                "summary": "[" & result.getRuleCode() & "] " & result.getFormattedMessage(),
                 "path": relativePath,
                 "severity": uCase(result.getSeverity()),
                 "line": result.getLine(),
@@ -742,20 +743,29 @@ component accessors="true" {
             
             // Map severity to Bitbucket types
             if (result.getSeverity() == "ERROR" OR result.getSeverity() == "FAILURE") {
-                annotation.type = "BUG";
-                annotation.severity = "HIGH";
+                annotation["type"] = "BUG";
+                annotation["severity"] = "HIGH";
             } else if (result.getSeverity() == "WARNING") {
-                annotation.type = "CODE_SMELL";
-                annotation.severity = "MEDIUM";
+                annotation["type"] = "CODE_SMELL";
+                annotation["severity"] = "MEDIUM";
             } else {
-                annotation.type = "CODE_SMELL";
-                annotation.severity = "LOW";
+                annotation["type"] = "CODE_SMELL";
+                annotation["severity"] = "LOW";
             }
             
+            // File based annotations (no line) should not have a line and end_line so they are attached to the whole line
+            var fileBasedAnnotationTypes = ["FILE_SHOULD_START_WITH_LOWERCASE","COMPONENT_INVALID_NAME"];
+            if (arrayContainsNoCase(fileBasedAnnotationTypes, result.getRuleCode())) {
+                structDelete(annotation, "line");
+                structDelete(annotation, "end_line");
+            }
+           
+
+
             arrayAppend(bitbucketReport.annotations, annotation);
         }
         
-        return serializeJSON(bitbucketReport);
+        return serializeJSON(var=bitbucketReport, compact: arguments.compact);
     }
 
     function out(any message){

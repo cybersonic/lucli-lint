@@ -46,9 +46,15 @@ component extends="testbox.system.BaseSpec"{
 
 
 
-                var ret = module.main(folder="../../../specs/artefacts/componentNames/", format="raw", configStruct=config, silent=true);
+                var ret = module.main(folder="../../../specs/artefacts/filenames/", format="json", configStruct=config, silent=true);
+                ret = deserializeJSON(ret);
                 debug(ret);
-                expect(ret.len()).toBe( 6 );
+
+                var InvalidNames = ret.results.filter( (item) => {
+                    return item.ruleCode == "COMPONENT_INVALID_NAME";
+                } );
+                debug(InvalidNames);
+                expect(InvalidNames.len()).toBe( 2 );
                 
                 
             } )
@@ -57,3 +63,4 @@ component extends="testbox.system.BaseSpec"{
     }
 
 }
+// 

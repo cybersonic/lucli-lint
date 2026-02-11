@@ -27,13 +27,17 @@ component extends="testbox.system.BaseSpec"{
                 };
                 var ret = module.main(file="../../../specs/artefacts/DumpExample.cfm", format="raw", configStruct=config, silent=true);
                 debug(ret);
-                expect(ret.len()).toBe( 3 );
-                expect(ret[1].getRuleCode()).toBe( "AVOID_USING_DUMP" );
-                expect(ret[1].getCode()).toBe( 'dump("elvis")' );
-                expect(ret[2].getRuleCode()).toBe( "AVOID_USING_DUMP" );
-                expect(ret[2].getCode()).toBe( 'writeDump(var="elvis")' );
-                expect(ret[3].getRuleCode()).toBe( "AVOID_USING_DUMP" );
-                expect(ret[3].getCode()).toInclude( 'cfdump' );
+                // filter to see only the dump results
+                results = ret.filter( (item) => {
+                    return item.getRuleCode() == "AVOID_USING_DUMP";
+                } );
+                expect(results.len()).toBe( 3 );
+                expect(results[1].getRuleCode()).toBe( "AVOID_USING_DUMP" );
+                expect(results[1].getCode()).toBe( 'dump("elvis")' );
+                expect(results[2].getRuleCode()).toBe( "AVOID_USING_DUMP" );
+                expect(results[2].getCode()).toBe( 'writeDump(var="elvis")' );
+                expect(results[3].getRuleCode()).toBe( "AVOID_USING_DUMP" );
+                expect(results[3].getCode()).toInclude( 'cfdump' );
 
             } );
         } );

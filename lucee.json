@@ -4,14 +4,14 @@
   "port" : 8000,
   "webroot" : "./",
   "monitoring" : {
-    "enabled" : false,
+    "enabled" : true,
     "jmx" : {
       "port" : 8003
     }
   },
   "jvm" : {
-    "maxMemory" : "512m",
-    "minMemory" : "128m",
+    "maxMemory" : "3g",
+    "minMemory" : "1g",
     "additionalArgs" : [ ]
   }
 }

@@ -16,7 +16,7 @@ component extends="../BaseRule" {
         variables.message = "Avoid leaving `cfoutput query=` statements in committed code. Debug information should be omitted from release code";
         variables.group = "BadPractice";
         variables.enabled = false; //Disable by default
-        variables.nodeType = "CFMLTag,CallExpression";
+        variables.nodeType = "CFMLTag";
 
         variables.parameters = {
             "extensions": "cfm,cfml,cfc"
@@ -30,7 +30,7 @@ component extends="../BaseRule" {
     function check(required struct node, required any helper, string fileName = "", string fileContent="") {
         var results = [];
 
-        if( node.name != "output" ){
+        if( node.name NEQ "output" ){
             return results;
         }
         

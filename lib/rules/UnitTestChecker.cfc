@@ -93,29 +93,19 @@ component extends="../BaseRule" {
                 "baseTemplatePath": GetBaseTemplatePath()
             }, label="File Comparison");*/
 
-            // Build detailed message based on what exists
-            var message = "";
-            var severity = "INFO";
-
+            // Only report when source file exists but test file is missing
             if (sourceExists && !testExists) {
-                message = "Source file exists but missing test file. Expected: #testRelativePath#";
-                severity = "WARNING";
-            } else if (!sourceExists && testExists) {
-                message = "Test file exists but missing source file. Expected: #sourceRelativePath#";
-                severity = "WARNING";
-            } else if (!sourceExists && !testExists) {
-                message = "Neither source nor test file found at expected locations #sourceRelativePath# <-> #testRelativePath#";
-                severity = "ERROR";
+                var message = "Source file exists but missing test file. Expected: #testRelativePath#";
+                var severity = "WARNING";
+                arrayAppend(results, createLintResult(
+                    lintRule = this,
+                    node = node,
+                    fileName = fileName,
+                    fileContent = fileContent,
+                    message = message,
+                    severity = severity
+                ));
             }
-
-            arrayAppend(results, createLintResult(
-                lintRule = this,
-                node = node,
-                fileName = fileName,
-                fileContent = fileContent,
-                message = message,
-                severity = severity
-            ));
         }
 
         return results;

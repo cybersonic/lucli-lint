@@ -14,11 +14,9 @@
         },
         "UNIT_TEST_CHECK": {
             "enabled": true,
-            "parameters": {
-                "unit_test_regex": "(com/myapp/.*/)(.*)\\.(?:cfc|cfm)$",
-                "source_folder": "artefacts/components/",
-                "test_folder": "artefacts/unit_tests/testcases/"
-            }
+            "unit_test_regex": "(com/myapp/.*/)(.*)\\.(?:cfc|cfm)$",
+            "source_folder": "artefacts/components/",
+            "test_folder": "artefacts/unit_tests/testcases/"
         }
     }
 }

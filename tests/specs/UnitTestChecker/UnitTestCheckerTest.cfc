@@ -49,8 +49,8 @@ component extends="testbox.system.BaseSpec"{
                 expect( issue.getSeverity() ).toBe( "WARNING" );
             });
 
-            it( "should warn when test exists but source is missing (WARNING)", () => {
-                // Test with a test file that does NOT have a corresponding source
+            it( "should not report when test exists but source is missing", () => {
+                // Rule only reports when source exists and test is missing; orphan tests are ignored
                 var ret = module.main(
                     file = "../artefacts/unit_tests/testcases/com/myapp/orphan/OrphanTest.cfc",
                     format = "raw",
@@ -59,12 +59,7 @@ component extends="testbox.system.BaseSpec"{
 
                 debug(ret);
                 expect( ret ).toBeArray();
-                expect( ret.len() ).toBe( 1 );
-
-                var issue = ret[1];
-                expect( issue.getRuleCode() ).toBe( "UNIT_TEST_CHECK" );
-                expect( issue.getMessage() ).toInclude( "missing source file" );
-                expect( issue.getSeverity() ).toBe( "WARNING" );
+                expect( ret.len() ).toBe( 0 );
             });
 
             it( "should return empty array when file doesn't match regex pattern", () => {

@@ -340,6 +340,7 @@ component accessors="true" {
     {
         var results = []
         node.type = node.type ?: "";
+
         for(var rule in arguments.allrules){
             var ruleItem = "Rule: #rule#"; 
             var ruleObj = arguments.allrules[rule];
@@ -385,6 +386,18 @@ component accessors="true" {
 
             // variables.timer.stop(ruleItem);
             results.append(ruleResults, true);
+        }
+
+        if(StructKeyExists(node, "argument") && isStruct(node.argument)){
+            var argument_results = recursiveNodeParser(
+                node: node.argument,
+                document: arguments.document,
+                fileName: arguments.fileName,
+                fileContent: fileContent,
+                helper: arguments.helper,
+                allrules: arguments.allrules
+                );
+            results.append(argument_results, true);
         }
 
         if(!StructKeyExists(node, "body")){

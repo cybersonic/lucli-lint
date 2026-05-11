@@ -39,6 +39,9 @@ component extends="../BaseRule" {
                                 AND node?.right?.callee?.type == "Identifier"
                                 AND compareNoCase(node?.right?.callee?.name ?: "", "queryExecute") == 0)
                         );
+
+        var ext = listLast(fileName, ".");
+        var extensionAllowed = listFindNoCase( variables.parameters.extensions, ext ) > 0;
     
         // More complex check for Query object creation
         if( node.type == "AssignmentExpression" && node?.right?.type == "CallExpression" &&
@@ -62,8 +65,7 @@ component extends="../BaseRule" {
         }
         
         // Check the extensions
-        var ext = listLast(fileName, ".");
-        if( not listFindNoCase( variables.parameters.extensions, ext ) ){
+        if( not extensionAllowed ){
             return results;
         }
         

@@ -58,6 +58,25 @@ component extends="testbox.system.BaseSpec"{
         )' );
             } )
 
+            it( "should find SQL inside an unknown custom tag wrapper", () => {
+                var ret = module.main(file="../../artefacts/customTagWrappedQuery.cfm", format="raw", rules="SQL_CHECK", silent=true);
+
+                expect( ret ).toBeArray();
+                expect( ret.len() ).toBe( 1 );
+                expect( ret[1].getRuleCode() ).toBe( "SQL_CHECK" );
+                expect( ret[1].getCode() ).toInclude( "SELECT id" );
+            } )
+
+            it( "should find queryExecute returned directly from a function", () => {
+                var ret = module.main(file="../../artefacts/components/com/myapp/services/ReturnQueryExecuteService.cfc", format="raw", rules="SQL_CHECK", silent=true);
+
+                expect( ret ).toBeArray();
+                expect( ret.len() ).toBe( 1 );
+                expect( ret[1].getRuleCode() ).toBe( "SQL_CHECK" );
+                expect( ret[1].getLine() ).toBe( 7 );
+                expect( ret[1].getCode() ).toInclude( "queryExecute" );
+            } )
+
         } )
     }
 

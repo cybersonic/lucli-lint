@@ -55,6 +55,11 @@ component accessors="true" {
             return lintResults;
         }
         catch(e){
+            if(isUndefinedTagParseError(e)){
+                var ast = astFromPathWithUndefinedTagFallback(arguments.filePath, e);
+                var lintResults = lintAST(ast, arguments.filePath);
+                return lintResults;
+            }
             if(variables.ruleConfiguration.getGlobalSetting("ignoreParseErrors", false)){
                 return [];
             }
@@ -87,6 +92,109 @@ component accessors="true" {
             ];
         }
         // Parse the file using Lucee's AST parser
+    }
+
+    private struct function astFromPathWithUndefinedTagFallback(required string filePath, required any originalError) {
+        var fileContent = fileRead(arguments.filePath);
+        var parseError = arguments.originalError;
+        var sanitizedTags = [];
+
+        for(var attempt = 1; attempt <= 10; attempt++){
+            var tagName = getUndefinedTagName(parseError.message ?: "");
+            if(!len(tagName)){
+                throw(type=parseError.type ?: "ParseError", message=parseError.message ?: "Unable to parse file", detail=parseError.detail ?: "");
+            }
+
+            var sanitizedContent = replaceUndefinedTagWithCfIf(fileContent, tagName);
+            if(sanitizedContent == fileContent){
+                throw(type=parseError.type ?: "ParseError", message=parseError.message ?: "Unable to parse file", detail=parseError.detail ?: "");
+            }
+
+            fileContent = sanitizedContent;
+            sanitizedTags.append(tagName);
+
+            try {
+                return astFromString(fileContent);
+            }
+            catch(any retryError) {
+                if(!isUndefinedTagParseError(retryError)){
+                    throw(type=retryError.type ?: "ParseError", message=retryError.message ?: "Unable to parse file", detail=retryError.detail ?: "");
+                }
+                parseError = retryError;
+            }
+        }
+
+        throw(type="ParseFallbackLimit", message="Unable to parse after sanitizing undefined tags: " & arrayToList(sanitizedTags));
+    }
+
+    private boolean function isUndefinedTagParseError(required any error) {
+        return findNoCase("undefined tag [", arguments.error.message ?: "") > 0;
+    }
+
+    private string function getUndefinedTagName(required string message) {
+        var marker = "undefined tag [";
+        var startAt = findNoCase(marker, arguments.message);
+        if(!startAt){
+            return "";
+        }
+
+        startAt += len(marker);
+        var endAt = find("]", arguments.message, startAt);
+        if(!endAt){
+            return "";
+        }
+
+        return mid(arguments.message, startAt, endAt - startAt);
+    }
+
+    private string function replaceUndefinedTagWithCfIf(required string fileContent, required string tagName) {
+        var lt = chr(60);
+        var gt = chr(62);
+        var sanitized = replaceTagMatchesPreservingLength(
+            content: arguments.fileContent,
+            pattern: lt & arguments.tagName & "(\s|" & gt & "|/)[^" & gt & "]*" & gt,
+            replacementPrefix: lt & "cfif true"
+        );
+
+        sanitized = replaceTagMatchesPreservingLength(
+            content: sanitized,
+            pattern: lt & "/" & arguments.tagName & "\s*" & gt,
+            replacementPrefix: lt & "/cfif"
+        );
+
+        return sanitized;
+    }
+
+    private string function replaceTagMatchesPreservingLength(
+        required string content,
+        required string pattern,
+        required string replacementPrefix
+    ) {
+        var output = arguments.content;
+        var startAt = 1;
+        var match = reFindNoCase(arguments.pattern, output, startAt, true);
+
+        while(arrayLen(match.pos) && match.pos[1] > 0){
+            var matchText = mid(output, match.pos[1], match.len[1]);
+            var replacement = makePaddedTagReplacement(matchText, arguments.replacementPrefix);
+            var prefix = match.pos[1] > 1 ? left(output, match.pos[1] - 1) : "";
+            output = prefix & replacement & mid(output, match.pos[1] + match.len[1]);
+            startAt = match.pos[1] + match.len[1];
+            match = reFindNoCase(arguments.pattern, output, startAt, true);
+        }
+
+        return output;
+    }
+
+    private string function makePaddedTagReplacement(required string matchText, required string replacementPrefix) {
+        var totalLength = len(arguments.matchText);
+        var paddingLength = totalLength - len(arguments.replacementPrefix) - 1;
+
+        if(paddingLength < 0){
+            return arguments.matchText;
+        }
+
+        return arguments.replacementPrefix & repeatString(" ", paddingLength) & ">";
     }
     /**
      * Lint all CFML files in a folder (recursively)
@@ -232,6 +340,7 @@ component accessors="true" {
     {
         var results = []
         node.type = node.type ?: "";
+
         for(var rule in arguments.allrules){
             var ruleItem = "Rule: #rule#"; 
             var ruleObj = arguments.allrules[rule];
@@ -277,6 +386,18 @@ component accessors="true" {
 
             // variables.timer.stop(ruleItem);
             results.append(ruleResults, true);
+        }
+
+        if(StructKeyExists(node, "argument") && isStruct(node.argument)){
+            var argument_results = recursiveNodeParser(
+                node: node.argument,
+                document: arguments.document,
+                fileName: arguments.fileName,
+                fileContent: fileContent,
+                helper: arguments.helper,
+                allrules: arguments.allrules
+                );
+            results.append(argument_results, true);
         }
 
         if(!StructKeyExists(node, "body")){

@@ -877,8 +877,8 @@ component accessors="true" {
             // File based annotations (no line) should not have a line and end_line so they are attached to the whole line
             var fileBasedAnnotationTypes = ["FILE_SHOULD_START_WITH_LOWERCASE","COMPONENT_INVALID_NAME"];
             if (arrayContainsNoCase(fileBasedAnnotationTypes, result.getRuleCode())) {
-                structDelete(annotation, "line");
-                structDelete(annotation, "end_line");
+                annotation["line"] = 0;
+                annotation["end_line"] = 0;
             }
            
 

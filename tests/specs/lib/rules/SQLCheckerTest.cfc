@@ -60,7 +60,7 @@ component extends="testbox.system.BaseSpec"{
 
             it( "should find SQL inside an unknown custom tag wrapper", () => {
                 var ret = module.main(file="../../artefacts/customTagWrappedQuery.cfm", format="raw", rules="SQL_CHECK", silent=true);
-
+                debug(ret);
                 expect( ret ).toBeArray();
                 expect( ret.len() ).toBe( 1 );
                 expect( ret[1].getRuleCode() ).toBe( "SQL_CHECK" );

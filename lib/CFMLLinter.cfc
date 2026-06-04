@@ -186,11 +186,13 @@ component accessors="true" {
             }
         );
 
-        // 2. Explicit closing tags: </tagName> (paired custom tags)
-        sanitized = replaceTagMatchesPreservingLength(
+        // 2. Explicit closing tags: rewrite to cfif close tag; pad with whitespace after gt, not inside the tag name
+        sanitized = replaceTagMatchesWithBuilder(
             content: sanitized,
             pattern: lt & "/" & arguments.tagName & "\s*" & gt,
-            replacementPrefix: lt & "/cfif"
+            builder: function(required string matchText){
+                return makePaddedClosingCfIfReplacement(matchText);
+            }
         );
 
         // 3. Opening tags with attributes: <tagName attr="..."> (not self-closing)
@@ -277,6 +279,21 @@ component accessors="true" {
             }
         }
         return arguments.matchText;
+    }
+
+    /**
+     * Replace a closing custom tag with a cfif close tag and pad with whitespace after the tag.
+     * Padding must not sit between the cfif name and gt or Lucee treats the tag name as cfif-plus-spaces.
+     */
+    private string function makePaddedClosingCfIfReplacement(required string matchText) {
+        var lt = chr(60);
+        var gt = chr(62);
+        var replacement = lt & "/cfif" & gt;
+        var totalLength = len(arguments.matchText);
+        if(len(replacement) > totalLength){
+            return arguments.matchText;
+        }
+        return replacement & repeatString(" ", totalLength - len(replacement));
     }
 
     /**

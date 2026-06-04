@@ -38,8 +38,7 @@ component extends="testbox.system.BaseSpec"{
                 var results = ret.filter( (item) => {
                     return item.getRuleCode() == "AVOID_USING_ABORT";
                 } );
-
-                expect(results.len()).toBe( 1 );
+                expect(results.len()).toBe( 2 );
                 expect(results[1].getRuleCode()).toBe( "AVOID_USING_ABORT" );
                 expect(results[1].getLine()).toBe( 4 );
             } );

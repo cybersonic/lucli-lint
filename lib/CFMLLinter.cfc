@@ -56,42 +56,54 @@ component accessors="true" {
         }
         catch(e){
             if(isUndefinedTagParseError(e)){
-                var ast = astFromPathWithUndefinedTagFallback(arguments.filePath, e);
-                var lintResults = lintAST(ast, arguments.filePath);
-                return lintResults;
+                try {
+                    var ast = astFromPathWithUndefinedTagFallback(arguments.filePath, e);
+                    var lintResults = lintAST(ast, arguments.filePath);
+                    return lintResults;
+                } catch (any fallbackError) {
+                    return handleParseFailure(arguments.filePath, fallbackError);
+                }
             }
-            if(variables.ruleConfiguration.getGlobalSetting("ignoreParseErrors", false)){
-                return [];
-            }
-            var ErrorLintResult = createObject("component", "LintResult").init(
-                    rule: {
-                        getRuleCode: function(){ return "ERROR"; },
-                        getRuleName: function(){ return "General Error"; },
-                        getDescription: function(){ return e.message; },
-                        getSeverity: function(){ return "FAILURE"; },
-                        getMessage: function(){ return  e.message; }
-                    },
-                    node: {
-                        start: { line: 0, column: 0, offset: 0 },
-                        end: { line: 0, column: 0, offset: 0 }
-                    },
-                    fileName: arguments.filePath,
-                    fileContent: "",
-                    severity: "FAILURE"
-                );
-            
-            var TagContext = e.TagContext ?: [];
-            if(ArrayLen(TagContext)){
-                ErrorLintResult.setLine(TagContext[1].line?:0);
-                ErrorLintResult.setCode(TagContext[1].codePrintPlain?:"");
-                ErrorLintResult.setColumn(TagContext[1].column ?: 0);
-                ErrorLintResult.setStackTrace(e.stackTrace ?: "");
-            }
-            return [
-                ErrorLintResult
-            ];
+            return handleParseFailure(arguments.filePath, e);
         }
         // Parse the file using Lucee's AST parser
+    }
+
+    /**
+     * Handle a parse failure for a single file without aborting the folder lint run.
+     * Returns an empty array when ignoreParseErrors is enabled, otherwise one ERROR LintResult.
+     */
+    private array function handleParseFailure(required string filePath, required any error) {
+        if(variables.ruleConfiguration.getGlobalSetting("ignoreParseErrors", false)){
+            return [];
+        }
+
+        var errorMessage = arguments.error.message ?: "";
+        var ErrorLintResult = createObject("component", "LintResult").init(
+                rule: {
+                    getRuleCode: function(){ return "ERROR"; },
+                    getRuleName: function(){ return "General Error"; },
+                    getDescription: function(){ return errorMessage; },
+                    getSeverity: function(){ return "FAILURE"; },
+                    getMessage: function(){ return errorMessage; }
+                },
+                node: {
+                    start: { line: 0, column: 0, offset: 0 },
+                    end: { line: 0, column: 0, offset: 0 }
+                },
+                fileName: arguments.filePath,
+                fileContent: "",
+                severity: "FAILURE"
+            );
+
+        var TagContext = arguments.error.TagContext ?: [];
+        if(ArrayLen(TagContext)){
+            ErrorLintResult.setLine(TagContext[1].line?:0);
+            ErrorLintResult.setCode(TagContext[1].codePrintPlain?:"");
+            ErrorLintResult.setColumn(TagContext[1].column ?: 0);
+            ErrorLintResult.setStackTrace(arguments.error.stackTrace ?: "");
+        }
+        return [ ErrorLintResult ];
     }
 
     private struct function astFromPathWithUndefinedTagFallback(required string filePath, required any originalError) {
@@ -147,22 +159,156 @@ component accessors="true" {
         return mid(arguments.message, startAt, endAt - startAt);
     }
 
+    /**
+     * Rewrite occurrences of one undefined custom tag so Lucee can build an AST for linting.
+     *
+     * LuCLI has no custom-tag registry, so tags like nav:adminnav or structuredData:FAQPage fail
+     * to parse. This substitutes known CFML (cfif) placeholders while keeping byte length where
+     * possible so rule offsets stay roughly aligned with the source file.
+     *
+     * Order matters: self-closing tags first, then closings, then openings, then balance.
+     *
+     * @fileContent Full source of the file being sanitized
+     * @tagName     Tag name from the parse error, e.g. "nav:adminnav" or "cfUnknownWrapper"
+     * @return      Sanitized source safe to pass to astFromString()
+     */
     private string function replaceUndefinedTagWithCfIf(required string fileContent, required string tagName) {
         var lt = chr(60);
         var gt = chr(62);
-        var sanitized = replaceTagMatchesPreservingLength(
-            content: arguments.fileContent,
-            pattern: lt & arguments.tagName & "(\s|" & gt & "|/)[^" & gt & "]*" & gt,
+        var sanitized = arguments.fileContent;
+
+        // 1. Self-closing: <tagName ... /> -> length-preserved <cfif false></cfif> (or shorter stub)
+        sanitized = replaceTagMatchesWithBuilder(
+            content: sanitized,
+            pattern: lt & arguments.tagName & "(\s[^" & gt & "]*)?\s*/" & gt,
+            builder: function(required string matchText){
+                return makePaddedBalancedCfIfReplacement(matchText);
+            }
+        );
+
+        // 2. Explicit closing tags: rewrite to cfif close tag; pad with whitespace after gt, not inside the tag name
+        sanitized = replaceTagMatchesWithBuilder(
+            content: sanitized,
+            pattern: lt & "/" & arguments.tagName & "\s*" & gt,
+            builder: function(required string matchText){
+                return makePaddedClosingCfIfReplacement(matchText);
+            }
+        );
+
+        // 3. Opening tags with attributes: <tagName attr="..."> (not self-closing)
+        sanitized = replaceTagMatchesPreservingLength(
+            content: sanitized,
+            pattern: lt & arguments.tagName & "(\s[^/" & gt & "][^" & gt & "]*)?" & gt,
             replacementPrefix: lt & "cfif true"
         );
 
+        // 4. Bare opening tags: <tagName> -> cfif true (no attributes)
         sanitized = replaceTagMatchesPreservingLength(
             content: sanitized,
-            pattern: lt & "/" & arguments.tagName & "\s*" & gt,
-            replacementPrefix: lt & "/cfif"
+            pattern: lt & arguments.tagName & gt,
+            replacementPrefix: lt & "cfif true"
         );
 
-        return sanitized;
+        // 5. Opening-only custom tags have no </tagName>; close synthetic cfif opens at EOF
+        return balanceUnclosedCfIfTags(sanitized);
+    }
+
+    /**
+     * Append cfif tag at end of file until cfif open/close counts match.
+     * Used after rewriting opening-only custom tags that never had a closing tag in source.
+     * Only runs on content already in the undefined-tag fallback path (see lintFile).
+     */
+    private string function balanceUnclosedCfIfTags(required string content) {
+        var lt = chr(60);
+        var gt = chr(62);
+        var opens = arrayLen(reMatchNoCase(lt & "cfif\b", arguments.content));
+        var closes = arrayLen(reMatchNoCase(lt & "/cfif" & gt, arguments.content));
+        var output = arguments.content;
+
+        for(var i = closes + 1; i <= opens; i++){
+            output &= lt & "/cfif" & gt;
+        }
+
+        return output;
+    }
+
+    /**
+     * Regex-replace tag matches using a callback that builds each replacement string.
+     * Used for self-closing custom tags that need a balanced cfif stub instead of a prefix.
+     */
+    private string function replaceTagMatchesWithBuilder(
+        required string content,
+        required string pattern,
+        required any builder
+    ) {
+        var output = arguments.content;
+        var startAt = 1;
+        var match = reFindNoCase(arguments.pattern, output, startAt, true);
+
+        while(arrayLen(match.pos) && match.pos[1] > 0){
+            var matchText = mid(output, match.pos[1], match.len[1]);
+            var replacement = arguments.builder(matchText);
+            if(len(replacement) != len(matchText)){
+                replacement = padReplacementToLength(matchText, replacement);
+            }
+            var prefix = match.pos[1] > 1 ? left(output, match.pos[1] - 1) : "";
+            output = prefix & replacement & mid(output, match.pos[1] + match.len[1]);
+            startAt = match.pos[1] + len(replacement);
+            match = reFindNoCase(arguments.pattern, output, startAt, true);
+        }
+
+        return output;
+    }
+
+    /**
+     * Build a same-length balanced <cfif></cfif> stub for a self-closing custom tag match.
+     * Picks the largest stub that fits within the original tag length (padding with spaces).
+     */
+    private string function makePaddedBalancedCfIfReplacement(required string matchText) {
+        var lt = chr(60);
+        var gt = chr(62);
+        var closeTag = lt & "/cfif" & gt;
+        var stubs = [
+            lt & "cfif false" & gt & closeTag,
+            lt & "cfif 0" & gt & closeTag,
+            lt & "cfif" & gt & closeTag
+        ];
+        for(var stub in stubs){
+            if(len(stub) <= len(arguments.matchText)){
+                return padReplacementToLength(arguments.matchText, stub);
+            }
+        }
+        return arguments.matchText;
+    }
+
+    /**
+     * Replace a closing custom tag with a cfif close tag and pad with whitespace after the tag.
+     * Padding must not sit between the cfif name and gt or Lucee treats the tag name as cfif-plus-spaces.
+     */
+    private string function makePaddedClosingCfIfReplacement(required string matchText) {
+        var lt = chr(60);
+        var gt = chr(62);
+        var replacement = lt & "/cfif" & gt;
+        var totalLength = len(arguments.matchText);
+        if(len(replacement) > totalLength){
+            return arguments.matchText;
+        }
+        return replacement & repeatString(" ", totalLength - len(replacement));
+    }
+
+    /**
+     * Pad a replacement string with trailing spaces so it equals the matched tag length.
+     * Preserving length keeps AST node offsets closer to the original file for lint rules.
+     */
+    private string function padReplacementToLength(required string matchText, required string replacement) {
+        var totalLength = len(arguments.matchText);
+        if(len(arguments.replacement) > totalLength){
+            return arguments.matchText;
+        }
+        if(totalLength == len(arguments.replacement)){
+            return arguments.replacement;
+        }
+        return arguments.replacement & repeatString(" ", totalLength - len(arguments.replacement));
     }
 
     private string function replaceTagMatchesPreservingLength(
